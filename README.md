@@ -97,7 +97,7 @@ If our work is useful for your research, please consider citing:
 
 ### License
 
-This project is licensed under <a rel="license" href="https://github.com/IceClear/StableSR/blob/master/LICENSE">NTU S-Lab License 1.0</a>. Redistribution and use should follow this license.
+This project is licensed under <a rel="license" href="https://github.com/IceClear/StableSR/blob/main/LICENSE.txt">NTU S-Lab License 1.0</a>. Redistribution and use should follow this license.
 
 ### Acknowledgement
 
