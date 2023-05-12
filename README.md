@@ -4,7 +4,7 @@
 
 ## Exploiting Diffusion Prior for Real-World Image Super-Resolution
 
-[Paper (Soon)](https://github.com/IceClear/StableSR) | [Project Page (Soon)](https://github.com/IceClear/StableSR) | [Video (Soon)](https://github.com/IceClear/StableSR)
+[Paper](https://arxiv.org/abs/2305.07015) | [Project Page](https://iceclear.github.io/projects/stablesr/) | [Video](https://www.youtube.com/watch?v=5MZy9Uhpkw4)
 
 
 ![visitors](https://visitor-badge.laobi.icu/badge?page_id=IceClear/StableSR)
@@ -17,11 +17,12 @@ S-Lab, Nanyang Technological University
 <img src="assets/network.png" width="800px"/>
 
 ### TODO
-- [ ] Update link to paper and project page
 - [ ] Pretrained models
 - [ ] HuggingFace demo
+- [ ] Replicate demo
 - [ ] Colab demo
 - [x] ~~Code release~~
+- [x] ~~Update link to paper and project page~~
 
 ### Demo
 
