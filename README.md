@@ -17,12 +17,12 @@ S-Lab, Nanyang Technological University
 <img src="assets/network.png" width="800px"/>
 
 ### TODO
-- [ ] Pretrained models
 - [ ] HuggingFace demo
 - [ ] Replicate demo
 - [ ] Colab demo
 - [x] ~~Code release~~
 - [x] ~~Update link to paper and project page~~
+- [x] ~~Pretrained models~~
 
 ### Demo
 
@@ -31,7 +31,7 @@ S-Lab, Nanyang Technological University
 [<img src="assets/imgsli_9.jpg" height="214px"/>](https://imgsli.com/MTc2MjQ5) [<img src="assets/imgsli_6.jpg" height="214px"/>](https://imgsli.com/MTc2MTM0) [<img src="assets/imgsli_7.jpg" height="214px"/>](https://imgsli.com/MTc2MTM2) [<img src="assets/imgsli_10.jpg" height="214px"/>](https://imgsli.com/MTc2MjU0)
 
 
-For more evaluation, please refer to our [paper](https://github.com/IceClear/StableSR) for details.
+For more evaluation, please refer to our [paper](https://arxiv.org/abs/2305.07015) for details.
 
 ### Dependencies and Installation
 - Pytorch == 1.12.1
@@ -73,7 +73,7 @@ python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --
 
 #### Test
 
-<!-- Download the Diffusion and VQGAN pretrained models from [[Google Drive](https://github.com/IceClear/StableSR) | [OneDrive](https://github.com/IceClear/StableSR)] -->
+Download the Diffusion and VQGAN pretrained models from [[Google Drive](https://drive.google.com/drive/folders/1FBkW9FtTBssM_42kOycMPE0o9U5biYCl?usp=sharing) | [OneDrive](https://entuedu-my.sharepoint.com/:f:/g/personal/jianyi001_e_ntu_edu_sg/Et5HPkgRyyxNk269f5xYCacBpZq-bggFRCDbL9imSQ5QDQ)]
 
 ```
 # Test on 128 --> 512
