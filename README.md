@@ -86,15 +86,15 @@ python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas.py --config configs/stableS
 python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --skip_grid --ddpm_steps 200 --dec_w 0.5
 ```
 
-<!-- ### Citation
+### Citation
 If our work is useful for your research, please consider citing:
 
-    @inproceedings{wang2022exploring,
+    @inproceedings{wang2023exploiting,
         author = {Wang, Jianyi and Yue, Zongsheng and Zhou, Shangchen and Chan, Kelvin CK and Loy, Chen Change},
         title = {Exploiting Diffusion Prior for Real-World Image Super-Resolution},
-        booktitle = {},
+        booktitle = {arXiv preprint arXiv:2305.07015},
         year = {2023}
-    } -->
+    }
 
 ### License
 
