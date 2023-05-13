@@ -34,8 +34,8 @@ For more evaluation, please refer to our [paper](https://arxiv.org/abs/2305.0701
 
 ### Demo on AIGC SR
 
-We further directly test StableSR on AIGC and compared with several diffusion-based upscaler following the suggestions.
-The demo below is a 4x resolution on the image from [here](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111).
+We further directly test StableSR on AIGC and compared with several diffusion-based upscalers following the suggestions.
+The demo below is a 4x SR on the image from [here](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111).
 The result is in 4K resolution.
 More comparisons can be found [here](https://github.com/IceClear/StableSR/issues/2).
 
