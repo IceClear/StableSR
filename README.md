@@ -36,7 +36,7 @@ For more evaluation, please refer to our [paper](https://arxiv.org/abs/2305.0701
 
 We further directly test StableSR on AIGC and compared with several diffusion-based upscaler following the suggestions.
 The demo below is a 4x resolution on the image from [here](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111).
-The results is in 4K resolution.
+The result is in 4K resolution.
 More comparisons can be found [here](https://github.com/IceClear/StableSR/issues/2).
 
 [<img src="assets/imgsli_11.jpg" width="800px"/>](https://imgsli.com/MTc4MDg3)
@@ -81,7 +81,8 @@ python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --
 
 #### Test
 
-Download the Diffusion and VQGAN pretrained models from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [Google Drive](https://drive.google.com/drive/folders/1FBkW9FtTBssM_42kOycMPE0o9U5biYCl?usp=sharing) | [OneDrive](https://entuedu-my.sharepoint.com/:f:/g/personal/jianyi001_e_ntu_edu_sg/Et5HPkgRyyxNk269f5xYCacBpZq-bggFRCDbL9imSQ5QDQ)]
+Download the Diffusion and VQGAN pretrained models from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [Google Drive](https://drive.google.com/drive/folders/1FBkW9FtTBssM_42kOycMPE0o9U5biYCl?usp=sharing) | [OneDrive](https://entuedu-my.sharepoint.com/:f:/g/personal/jianyi001_e_ntu_edu_sg/Et5HPkgRyyxNk269f5xYCacBpZq-bggFRCDbL9imSQ5QDQ)].
+You may add ```--nocolor``` to disable color correction, this may lead to brighter results with less color similarity to the LR input.
 
 ```
 # Test on 128 --> 512

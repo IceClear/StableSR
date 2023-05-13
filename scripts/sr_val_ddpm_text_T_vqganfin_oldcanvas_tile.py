@@ -27,15 +27,6 @@ import cv2
 from util_image import ImageSpliterTh
 from pathlib import Path
 
-def exact_feature_distribution_matching(content, style):
-	assert (content.size() == style.size()) ## content and style features should share the same shape
-	B, C, W, H = content.size(0), content.size(1), content.size(2), content.size(3)
-	_, index_content = torch.sort(content.reshape(B,C,-1))  ## sort content feature
-	value_style, _ = torch.sort(style.reshape(B,C,-1))      ## sort style feature
-	inverse_index = index_content.argsort(-1)
-	transferred_content = content.reshape(B,C,-1) + value_style.gather(-1, inverse_index) - content.reshape(B,C,-1).detach()
-	return transferred_content.reshape(B, C, W, H)
-
 def get_mean_and_std(x):
 	x_mean, x_std = cv2.meanStdDev(x)
 	x_mean = np.hstack(np.around(x_mean,2))
@@ -420,7 +411,7 @@ def main():
 							_, enc_fea_lq = vq_model.encode(im_lq_pch)
 							x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
 							if not opt.nocolor:
-								x_samples = exact_feature_distribution_matching(x_samples, im_lq_pch)
+								x_samples = adaptive_instance_normalization(x_samples, im_lq_pch)
 							im_spliter.update(x_samples, index_infos)
 						im_sr = im_spliter.gather()
 						im_sr = torch.clamp((im_sr+1.0)/2.0, min=0.0, max=1.0)
@@ -436,7 +427,7 @@ def main():
 						_, enc_fea_lq = vq_model.encode(im_lq_bs)
 						x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
 						if not opt.nocolor:
-							x_samples = exact_feature_distribution_matching(x_samples, ori_img)
+							x_samples = adaptive_instance_normalization(x_samples, ori_img)
 						im_sr = torch.clamp((x_samples+1.0)/2.0, min=0.0, max=1.0)
 
 					if upsample_scale > opt.upscale:
