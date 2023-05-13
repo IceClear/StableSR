@@ -24,14 +24,19 @@ S-Lab, Nanyang Technological University
 - [x] ~~Update link to paper and project page~~
 - [x] ~~Pretrained models~~
 
-### Demo
+### Demo on real-world SR
 
 [<img src="assets/imgsli_1.jpg" height="223px"/>](https://imgsli.com/MTc2MTI2) [<img src="assets/imgsli_2.jpg" height="223px"/>](https://imgsli.com/MTc2MTE2) [<img src="assets/imgsli_3.jpg" height="223px"/>](https://imgsli.com/MTc2MTIw)
 [<img src="assets/imgsli_8.jpg" height="223px"/>](https://imgsli.com/MTc2MjUy) [<img src="assets/imgsli_4.jpg" height="223px"/>](https://imgsli.com/MTc2MTMy) [<img src="assets/imgsli_5.jpg" height="223px"/>](https://imgsli.com/MTc2MTMz)
 [<img src="assets/imgsli_9.jpg" height="214px"/>](https://imgsli.com/MTc2MjQ5) [<img src="assets/imgsli_6.jpg" height="214px"/>](https://imgsli.com/MTc2MTM0) [<img src="assets/imgsli_7.jpg" height="214px"/>](https://imgsli.com/MTc2MTM2) [<img src="assets/imgsli_10.jpg" height="214px"/>](https://imgsli.com/MTc2MjU0)
 
-
 For more evaluation, please refer to our [paper](https://arxiv.org/abs/2305.07015) for details.
+
+### Demo on AIGC SR
+
+We further directly test StableSR on AIGC and compared with several diffusion-based upscaler following the suggestions. The demo below is a 4x resolution on the images from [here](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111). The results is in 4K resolution. More comparisons can be found [here](https://github.com/IceClear/StableSR/issues/2).
+
+[<img src="assets/imgsli_11.jpg" width="800px"/>](https://imgsli.com/MTc4MDg3)
 
 ### Dependencies and Installation
 - Pytorch == 1.12.1
