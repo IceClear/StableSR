@@ -32,14 +32,16 @@ S-Lab, Nanyang Technological University
 
 For more evaluation, please refer to our [paper](https://arxiv.org/abs/2305.07015) for details.
 
-### Demo on AIGC SR
+### Demo on 4K Results
+
+StableSR is capable of achieving arbitrary upscaling in theory, below is a 8x example with a result beyond 4K (5120x3680).
+The example image is taken from [here](https://github.com/Mikubill/sd-webui-controlnet/blob/main/tests/images/ski.jpg).
+
+[<img src="assets/imgsli_11.jpg" width="800px"/>](https://imgsli.com/MTc4NDk2)
 
 We further directly test StableSR on AIGC and compared with several diffusion-based upscalers following the suggestions.
-The demo below is a 4x SR on the image from [here](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111).
-The result is in 4K resolution.
+A 4K demo is [here](https://imgsli.com/MTc4MDg3), which is a 4x SR on the image from [here](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111).
 More comparisons can be found [here](https://github.com/IceClear/StableSR/issues/2).
-
-[<img src="assets/imgsli_11.jpg" width="800px"/>](https://imgsli.com/MTc4MDg3)
 
 ### Dependencies and Installation
 - Pytorch == 1.12.1
