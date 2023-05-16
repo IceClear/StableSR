@@ -19,7 +19,6 @@ from pytorch_lightning import seed_everything
 from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
-from basicsr.metrics import calculate_niqe
 import math
 import copy
 import torch.nn.functional as F
@@ -146,32 +145,19 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--init-img",
-        type=str,
-        nargs="?",
-        help="path to the input image",
-        default="/mnt/lustre/share/jywang/dataset/ImageSR/RealSRSet/"
-    )
-
+		"--init-img",
+		type=str,
+		nargs="?",
+		help="path to the input image",
+		default="inputs/user_upload"
+	)
     parser.add_argument(
-        "--outdir",
-        type=str,
-        nargs="?",
-        help="dir to write results to",
-        default="outputs/sr-samples"
-    )
-
-    parser.add_argument(
-        "--skip_grid",
-        action='store_true',
-        help="do not save a grid, only individual samples. Helpful when evaluating lots of samples",
-    )
-
-    parser.add_argument(
-        "--skip_save",
-        action='store_true',
-        help="do not save indiviual samples. For speed measurements.",
-    )
+		"--outdir",
+		type=str,
+		nargs="?",
+		help="dir to write results to",
+		default="outputs/user_upload"
+	)
     parser.add_argument(
         "--ddpm_steps",
         type=int,
@@ -197,27 +183,21 @@ def main():
         help="how many samples to produce for each given prompt. A.k.a batch size",
     )
     parser.add_argument(
-        "--n_rows",
-        type=int,
-        default=0,
-        help="rows in the grid (default: n_samples)",
-    )
-    parser.add_argument(
         "--config",
         type=str,
-        default="configs/stable-diffusion/v1-inference.yaml",
+        default="configs/stableSRNew/v2-finetune_text_T_512.yaml",
         help="path to config which constructs model",
     )
     parser.add_argument(
         "--ckpt",
         type=str,
-        default="models/ldm/stable-diffusion-v1/model.ckpt",
+        default="./stablesr_000117.ckpt",
         help="path to checkpoint of model",
     )
     parser.add_argument(
         "--vqgan_ckpt",
         type=str,
-        default="models/ldm/stable-diffusion-v1/epoch=000011.ckpt",
+        default="./vqgan_cfw_00011.ckpt",
         help="path to checkpoint of VQGAN model",
     )
     parser.add_argument(
@@ -239,11 +219,10 @@ def main():
         default=512,
         help="input size",
     )
-
     parser.add_argument(
         "--dec_w",
         type=float,
-        default=1.0,
+        default=0.5,
         help="weight for combining VQGAN and Diffusion",
     )
     parser.add_argument(
@@ -252,14 +231,12 @@ def main():
         default=32,
         help="tile overlap size",
     )
-
     parser.add_argument(
         "--upscale",
         type=float,
         default=4.0,
         help="upsample scale",
     )
-
     parser.add_argument(
         "--nocolor",
         action='store_true',
@@ -285,27 +262,15 @@ def main():
     outpath = opt.outdir
 
     batch_size = opt.n_samples
-    n_rows = opt.n_rows if opt.n_rows > 0 else batch_size
-
-    sample_path = os.path.join(outpath, "samples")
-    os.makedirs(sample_path, exist_ok=True)
-    input_path = os.path.join(outpath, "inputs")
-    os.makedirs(input_path, exist_ok=True)
-    base_count = len(os.listdir(sample_path))
-    base_i = len(os.listdir(input_path))
-    grid_count = len(os.listdir(outpath)) - 1
 
     img_list_ori = os.listdir(opt.init_img)
     img_list = copy.deepcopy(img_list_ori)
     init_image_list = []
     for item in img_list_ori:
-        if os.path.exists(os.path.join(sample_path, item)):
+        if os.path.exists(os.path.join(outpath, item)):
             img_list.remove(item)
             continue
         cur_image = load_img(os.path.join(opt.init_img, item)).to(device)
-        if cur_image.size(-1) * cur_image.size(-2) >= 448*624:
-            img_list.remove(item)
-            continue
         # max size: 1800 x 1800 for V100
         cur_image = F.interpolate(
                 cur_image,
@@ -339,7 +304,6 @@ def main():
     model_ori = model_ori.to(device)
 
     precision_scope = autocast if opt.precision == "autocast" else nullcontext
-    niqe_list = []
     with torch.no_grad():
         with precision_scope("cuda"):
             with model.ema_scope():
@@ -380,45 +344,12 @@ def main():
                         x_samples = adaptive_instance_normalization(x_samples, init_image)
                     x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
 
-                    if not opt.skip_save:
-                        for i in range(init_image.size(0)):
-                            img_name = img_list.pop(0)
-                            x_sample = 255. * rearrange(x_samples[i].cpu().numpy(), 'c h w -> h w c')
-                            niqe_list.append(calculate_niqe(x_sample, 0, input_order='HWC', convert_to='y'))
-                            Image.fromarray(x_sample.astype(np.uint8)).save(
-                                os.path.join(sample_path, img_name))
-                            base_count += 1
-                            x_input = 255. * rearrange(init_image[i].cpu().numpy(), 'c h w -> h w c')
-                            x_input = (x_input+255.)/2
-                            Image.fromarray(x_input.astype(np.uint8)).save(
-                                os.path.join(input_path, img_name))
-                        base_i += init_image.size(0)
-                    if not opt.skip_grid:
-                        all_samples.append(x_samples)
-
-                if not opt.skip_grid:
-                    # additionally, save as grid
-                    all_samples_new = []
-                    for item in all_samples:
-                        if item.size(0) < batch_size:
-                            template_tensor = item[0].unsqueeze(0)
-                            add_tensor = torch.zeros_like(template_tensor).repeat(batch_size-item.size(0), 1,1,1)
-                            item = torch.cat([item, add_tensor], dim=0)
-                            assert item.size(0) == batch_size
-                        all_samples_new.append(item)
-                    grid = torch.stack(all_samples_new, 0)
-                    grid = rearrange(grid, 'n b c h w -> (n b) c h w')
-                    grid = make_grid(grid, nrow=n_rows)
-
-                    # to image
-                    grid = 255. * rearrange(grid, 'c h w -> h w c').cpu().numpy()
-                    Image.fromarray(grid.astype(np.uint8)).save(os.path.join(outpath, f'grid-{grid_count:04}.png'))
-                    grid_count += 1
-
-                assert len(niqe_list) == len(img_list)
-                avg_niqe = np.mean(np.array(niqe_list))
-
-                print(f"Average NIQE score: {avg_niqe:.3f} \n")
+                    for i in range(init_image.size(0)):
+                        img_name = img_list.pop(0)
+                        basename = os.path.splitext(os.path.basename(img_name))[0]
+                        x_sample = 255. * rearrange(x_samples[i].cpu().numpy(), 'c h w -> h w c')
+                        Image.fromarray(x_sample.astype(np.uint8)).save(
+                            os.path.join(outpath, basename+'.png'))
 
                 toc = time.time()
 

@@ -19,7 +19,6 @@ from pytorch_lightning import seed_everything
 from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
-from basicsr.metrics import calculate_niqe
 import math
 import copy
 import torch.nn.functional as F
@@ -165,27 +164,14 @@ def main():
 		type=str,
 		nargs="?",
 		help="path to the input image",
-		default="/dataset/ImageSR/RealSRSet/"
+		default="inputs/user_upload"
 	)
-
 	parser.add_argument(
 		"--outdir",
 		type=str,
 		nargs="?",
 		help="dir to write results to",
-		default="outputs/sr-samples"
-	)
-
-	parser.add_argument(
-		"--skip_grid",
-		action='store_true',
-		help="do not save a grid, only individual samples. Helpful when evaluating lots of samples",
-	)
-
-	parser.add_argument(
-		"--skip_save",
-		action='store_true',
-		help="do not save indiviual samples. For speed measurements.",
+		default="outputs/user_upload"
 	)
 	parser.add_argument(
 		"--ddpm_steps",
@@ -218,13 +204,6 @@ def main():
 		help="how many samples to produce for each given prompt. A.k.a batch size",
 	)
 	parser.add_argument(
-		"--n_rows",
-		type=int,
-		default=0,
-		help="rows in the grid (default: n_samples)",
-	)
-
-	parser.add_argument(
 		"--config",
 		type=str,
 		default="configs/stable-diffusion/v1-inference.yaml",
@@ -233,13 +212,13 @@ def main():
 	parser.add_argument(
 		"--ckpt",
 		type=str,
-		default="models/ldm/stable-diffusion-v1/model.ckpt",
+		default="./stablesr_000117.ckpt",
 		help="path to checkpoint of model",
 	)
 	parser.add_argument(
         "--vqgan_ckpt",
         type=str,
-        default="models/ldm/stable-diffusion-v1/epoch=000011.ckpt",
+        default="./vqgan_cfw_00011.ckpt",
         help="path to checkpoint of VQGAN model",
     )
 	parser.add_argument(
@@ -256,16 +235,9 @@ def main():
 		default="autocast"
 	)
 	parser.add_argument(
-		"--input_size",
-		type=int,
-		default=512,
-		help="input size",
-	)
-
-	parser.add_argument(
 		"--dec_w",
 		type=float,
-		default=1.0,
+		default=0.5,
 		help="weight for combining VQGAN and Diffusion",
 	)
 	parser.add_argument(
@@ -274,7 +246,6 @@ def main():
 		default=32,
 		help="tile overlap size",
 	)
-
 	parser.add_argument(
 		"--upscale",
 		type=float,
@@ -306,18 +277,8 @@ def main():
 	outpath = opt.outdir
 
 	batch_size = opt.n_samples
-	n_rows = opt.n_rows if opt.n_rows > 0 else batch_size
 
-	sample_path = os.path.join(outpath, "samples")
-	os.makedirs(sample_path, exist_ok=True)
-	input_path = os.path.join(outpath, "inputs")
-	os.makedirs(input_path, exist_ok=True)
-	base_count = len(os.listdir(sample_path))
-	base_i = len(os.listdir(input_path))
-	grid_count = len(os.listdir(outpath)) - 1
-
-	images_path_ori = sorted(glob.glob(os.path.join(opt.init_img, "*.png")))
-	images_path_ori.extend(sorted(glob.glob(os.path.join(opt.init_img, "*.jpg"))))
+	images_path_ori = sorted(glob.glob(os.path.join(opt.init_img, "*")))
 	images_path = copy.deepcopy(images_path_ori)
 	for item in images_path_ori:
 		img_name = item.split('/')[-1]
@@ -445,7 +406,9 @@ def main():
 						im_sr = im_sr[:, :ori_h*sf, :ori_w*sf, ]
 
 					for jj in range(im_lq_bs.shape[0]):
-						outpath = str(Path(opt.outdir) / Path(im_path_bs[jj]).name)
+						img_name = str(Path(im_path_bs[jj]).name)
+						basename = os.path.splitext(os.path.basename(img_name))[0]
+						outpath = str(Path(opt.outdir)) + '/' + basename + '.png'
 						Image.fromarray(im_sr[jj, ].astype(np.uint8)).save(outpath)
 
 			toc = time.time()
