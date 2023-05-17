@@ -302,7 +302,7 @@ def main():
 						  linear_start=0.00085, linear_end=0.0120, cosine_s=8e-3)
 	model.num_timesteps = 1000
 
-	model_ori = copy.deepcopy(model)
+	# model_ori = copy.deepcopy(model)
 
 	use_timesteps = set(space_timesteps(1000, [opt.ddpm_steps]))
 	last_alpha_cumprod = 1.0
@@ -319,7 +319,7 @@ def main():
 	model.ori_timesteps = list(use_timesteps)
 	model.ori_timesteps.sort()
 	model = model.to(device)
-	model_ori = model_ori.to(device)
+	# model_ori = model_ori.to(device)
 
 	precision_scope = autocast if opt.precision == "autocast" else nullcontext
 	niqe_list = []
@@ -377,9 +377,10 @@ def main():
 							text_init = ['']*opt.n_samples
 							semantic_c = model.cond_stage_model(text_init)
 							noise = torch.randn_like(init_latent)
-							t = repeat(torch.tensor([999]), '1 -> b', b=im_lq_bs.size(0))
-							t = t.to(device).long()
-							x_T = model_ori.q_sample(x_start=init_latent, t=t, noise=noise)
+							# t = repeat(torch.tensor([999]), '1 -> b', b=im_lq_bs.size(0))
+							# t = t.to(device).long()
+							# x_T = model_ori.q_sample(x_start=init_latent, t=t, noise=noise)
+							x_T = noise
 							samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_pch.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
 							_, enc_fea_lq = vq_model.encode(im_lq_pch)
 							x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
@@ -393,9 +394,10 @@ def main():
 						text_init = ['']*opt.n_samples
 						semantic_c = model.cond_stage_model(text_init)
 						noise = torch.randn_like(init_latent)
-						t = repeat(torch.tensor([999]), '1 -> b', b=im_lq_bs.size(0))
-						t = t.to(device).long()
-						x_T = model_ori.q_sample(x_start=init_latent, t=t, noise=noise)
+						# t = repeat(torch.tensor([999]), '1 -> b', b=im_lq_bs.size(0))
+						# t = t.to(device).long()
+						# x_T = model_ori.q_sample(x_start=init_latent, t=t, noise=noise)
+						x_T = noise
 						samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_bs.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
 						_, enc_fea_lq = vq_model.encode(im_lq_bs)
 						x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)

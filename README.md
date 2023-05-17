@@ -88,15 +88,15 @@ You may add ```--nocolor``` to disable color correction, this may lead to bright
 
 ```
 # Test on 128 --> 512
-# You need at least 15G GPU memory to run this script
+# You need at least 10G GPU memory to run this script (batchsize 2)
 python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5
 
 # Test on arbitrary size w/o chop for VQGAN (for results beyond 512)
-# The memory cost depends on your image size, but usually above 16G. A 32G GPU can host a result with 1800x1800 at most.
+# The memory cost depends on your image size, but usually above 10G.
 python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5
 
 # Test on arbitrary size w/ chop for VQGAN (if exceed the limit of GPU memory)
-# Current default setting needs at least 25G to run, you may reduce the VQGAN tile size by setting --vqgantile_size and --vqgantile_stride.
+# Current default setting needs at least 18G to run, you may reduce the VQGAN tile size by setting --vqgantile_size and --vqgantile_stride.
 # Note the min tile size is 512 and stride should be smaller than tile size. Smaller size may introduce more border artifacts.
 python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5
 ```

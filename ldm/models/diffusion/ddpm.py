@@ -2054,7 +2054,7 @@ class LatentDiffusionSRTextWT(DDPM):
                     mode='bicubic',
                     )
 
-        if random.random() < self.configs.degradation['no_degradation_prob']:
+        if random.random() < self.configs.degradation['no_degradation_prob'] or torch.isnan(self.lq).any():
             self.lq = self.gt
 
         # training pair pool
