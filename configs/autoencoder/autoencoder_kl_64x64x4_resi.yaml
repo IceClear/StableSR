@@ -45,13 +45,13 @@ data:
     train:
       target: basicsr.data.single_image_dataset.SingleImageNPDataset
       params:
-        gt_path: ['/mnt/lustre/share/jywang/ddpm_data/v2-T1000-s200_new/']
+        gt_path: ['/mnt/lustre/share/jywang/ddpm_data/CFW_trainingdata/']
         io_backend:
           type: disk
     validation:
       target: basicsr.data.single_image_dataset.SingleImageNPDataset
       params:
-        gt_path: ['/mnt/lustre/share/jywang/ddpm_data/v2-T200-2stagelight/']
+        gt_path: ['/mnt/lustre/share/jywang/ddpm_data/CFW_trainingdata/']
         io_backend:
           type: disk
 
