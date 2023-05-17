@@ -244,7 +244,7 @@ def main():
 		"--tile_overlap",
 		type=int,
 		default=32,
-		help="tile overlap size",
+		help="tile overlap size (in latent)",
 	)
 	parser.add_argument(
 		"--upscale",
@@ -256,6 +256,18 @@ def main():
 		"--nocolor",
 		action='store_true',
 		help="if cancel color correction",
+	)
+	parser.add_argument(
+		"--vqgantile_stride",
+		type=int,
+		default=1000,
+		help="the stride for tile operation before VQGAN decoder (in pixel)",
+	)
+	parser.add_argument(
+		"--vqgantile_size",
+		type=int,
+		default=1280,
+		help="the size for tile operation before VQGAN decoder (in pixel)",
 	)
 
 	opt = parser.parse_args()
@@ -358,7 +370,7 @@ def main():
 					ori_img = im_lq_bs.clone()
 
 					if im_lq_bs.shape[2] > 1280 or im_lq_bs.shape[3] > 1280:
-						im_spliter = ImageSpliterTh(im_lq_bs, 1280, 1000, sf=1)
+						im_spliter = ImageSpliterTh(im_lq_bs, opt.vqgantile_size, opt.vqgantile_stride, sf=1)
 						for im_lq_pch, index_infos in im_spliter:
 							seed_everything(opt.seed)
 							init_latent = model.get_first_stage_encoding(model.encode_first_stage(im_lq_pch))  # move to latent space
