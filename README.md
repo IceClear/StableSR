@@ -19,10 +19,10 @@ S-Lab, Nanyang Technological University
 ### TODO
 - [ ] HuggingFace demo
 - [ ] Replicate demo
-- [x] Colab demo (Not test yet)
 - [x] ~~Code release~~
 - [x] ~~Update link to paper and project page~~
 - [x] ~~Pretrained models~~
+- [x] ~~Colab demo~~
 
 ### Demo on real-world SR
 
