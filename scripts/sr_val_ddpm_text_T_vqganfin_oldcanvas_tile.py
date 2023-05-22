@@ -25,41 +25,7 @@ import torch.nn.functional as F
 import cv2
 from util_image import ImageSpliterTh
 from pathlib import Path
-
-def get_mean_and_std(x):
-	x_mean, x_std = cv2.meanStdDev(x)
-	x_mean = np.hstack(np.around(x_mean,2))
-	x_std = np.hstack(np.around(x_std,2))
-	return x_mean, x_std
-
-def calc_mean_std(feat, eps=1e-5):
-	"""Calculate mean and std for adaptive_instance_normalization.
-	Args:
-		feat (Tensor): 4D tensor.
-		eps (float): A small value added to the variance to avoid
-			divide-by-zero. Default: 1e-5.
-	"""
-	size = feat.size()
-	assert len(size) == 4, 'The input feature should be 4D tensor.'
-	b, c = size[:2]
-	feat_var = feat.reshape(b, c, -1).var(dim=2) + eps
-	feat_std = feat_var.sqrt().reshape(b, c, 1, 1)
-	feat_mean = feat.reshape(b, c, -1).mean(dim=2).reshape(b, c, 1, 1)
-	return feat_mean, feat_std
-
-def adaptive_instance_normalization(content_feat, style_feat):
-	"""Adaptive instance normalization.
-	Adjust the reference features to have the similar color and illuminations
-	as those in the degradate features.
-	Args:
-		content_feat (Tensor): The reference feature.
-		style_feat (Tensor): The degradate features.
-	"""
-	size = content_feat.size()
-	style_mean, style_std = calc_mean_std(style_feat)
-	content_mean, content_std = calc_mean_std(content_feat)
-	normalized_feat = (content_feat - content_mean.expand(size)) / content_std.expand(size)
-	return normalized_feat * style_std.expand(size) + style_mean.expand(size)
+from scripts.wavelet_color_fix import wavelet_reconstruction, adaptive_instance_normalization
 
 def space_timesteps(num_timesteps, section_counts):
 	"""
@@ -253,10 +219,11 @@ def main():
 		help="upsample scale",
 	)
 	parser.add_argument(
-		"--nocolor",
-		action='store_true',
-		help="if cancel color correction",
-	)
+        "--colorfix_type",
+        type=str,
+        default="nofix",
+        help="Color fix type to adjust the color of HR result according to LR input: adain (used in paper); wavelet; nofix",
+    )
 	parser.add_argument(
 		"--vqgantile_stride",
 		type=int,
@@ -272,6 +239,15 @@ def main():
 
 	opt = parser.parse_args()
 	seed_everything(opt.seed)
+
+	print('>>>>>>>>>>color correction>>>>>>>>>>>')
+    if opt.colorfix_type == 'adain':
+        print('Use adain color correction')
+    elif opt.colorfix_type == 'wavelet':
+        print('Use wavelet color correction')
+    else:
+        print('No color correction')
+    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 
 	config = OmegaConf.load(f"{opt.config}")
 	model = load_model_from_config(config, f"{opt.ckpt}")
@@ -367,9 +343,7 @@ def main():
 					else:
 						flag_pad = False
 
-					ori_img = im_lq_bs.clone()
-
-					if im_lq_bs.shape[2] > 1280 or im_lq_bs.shape[3] > 1280:
+					if im_lq_bs.shape[2] > opt.vqgantile_size or im_lq_bs.shape[3] > opt.vqgantile_size:
 						im_spliter = ImageSpliterTh(im_lq_bs, opt.vqgantile_size, opt.vqgantile_stride, sf=1)
 						for im_lq_pch, index_infos in im_spliter:
 							seed_everything(opt.seed)
@@ -384,8 +358,10 @@ def main():
 							samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_pch.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
 							_, enc_fea_lq = vq_model.encode(im_lq_pch)
 							x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
-							if not opt.nocolor:
+							if opt.colorfix_type == 'adain':
 								x_samples = adaptive_instance_normalization(x_samples, im_lq_pch)
+			                elif opt.colorfix_type == 'wavelet':
+			                    x_samples = wavelet_reconstruction(x_samples, im_lq_pch)
 							im_spliter.update(x_samples, index_infos)
 						im_sr = im_spliter.gather()
 						im_sr = torch.clamp((im_sr+1.0)/2.0, min=0.0, max=1.0)
@@ -401,15 +377,17 @@ def main():
 						samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_bs.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
 						_, enc_fea_lq = vq_model.encode(im_lq_bs)
 						x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
-						if not opt.nocolor:
-							x_samples = adaptive_instance_normalization(x_samples, ori_img)
+						if opt.colorfix_type == 'adain':
+							x_samples = adaptive_instance_normalization(x_samples, im_lq_bs)
+						elif opt.colorfix_type == 'wavelet':
+							x_samples = wavelet_reconstruction(x_samples, im_lq_bs)
 						im_sr = torch.clamp((x_samples+1.0)/2.0, min=0.0, max=1.0)
 
 					if upsample_scale > opt.upscale:
 						im_sr = F.interpolate(
 									im_sr,
-									size=(int(ori_img.size(-2)*opt.upscale/upsample_scale),
-										  int(ori_img.size(-1)*opt.upscale/upsample_scale)),
+									size=(int(im_lq_bs.size(-2)*opt.upscale/upsample_scale),
+										  int(im_lq_bs.size(-1)*opt.upscale/upsample_scale)),
 									mode='bicubic',
 									)
 						im_sr = torch.clamp(im_sr, min=0.0, max=1.0)

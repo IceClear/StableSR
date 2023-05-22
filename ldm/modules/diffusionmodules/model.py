@@ -545,7 +545,8 @@ class Encoder(nn.Module):
                     h = self.down[i_level].attn[i_block](h)
                 hs.append(h)
             if return_fea:
-                fea_list.append(h)
+                if i_level==1 or i_level==2:
+                    fea_list.append(h)
             if i_level != self.num_resolutions-1:
                 hs.append(self.down[i_level].downsample(hs[-1]))
 
@@ -728,9 +729,6 @@ class Decoder_Mix(nn.Module):
                 if i_level != 0:
                     fuse_layer = Fuse_sft_block_RRDB(in_ch=block_out, out_ch=block_out, num_block=num_fuse_block)
                     setattr(self, 'fusion_layer_{}'.format(i_level), fuse_layer)
-            # else:
-            #     fuse_layer = Fuse_sft_block_RRDB(in_ch=block_in, out_ch=block_in, num_block=num_fuse_block)
-            #     setattr(self, 'fusion_layer_{}'.format(i_level), fuse_layer)
 
             for i_block in range(self.num_res_blocks+1):
                 block.append(ResnetBlock(in_channels=block_in,
@@ -774,10 +772,6 @@ class Decoder_Mix(nn.Module):
 
         # upsampling
         for i_level in reversed(range(self.num_resolutions)):
-            # if i_level == self.num_resolutions-1:
-            #     cur_fuse_layer = getattr(self, 'fusion_layer_{}'.format(i_level))
-            #     h = cur_fuse_layer(enc_fea[i_level], h, self.fusion_w)
-
             for i_block in range(self.num_res_blocks+1):
                 h = self.up[i_level].block[i_block](h, temb)
                 if len(self.up[i_level].attn) > 0:
@@ -785,7 +779,7 @@ class Decoder_Mix(nn.Module):
 
             if i_level != self.num_resolutions-1 and i_level != 0:
                 cur_fuse_layer = getattr(self, 'fusion_layer_{}'.format(i_level))
-                h = cur_fuse_layer(enc_fea[i_level], h, self.fusion_w)
+                h = cur_fuse_layer(enc_fea[i_level-1], h, self.fusion_w)
 
             if i_level != 0:
                 h = self.up[i_level].upsample(h)
@@ -833,17 +827,9 @@ class Fuse_sft_block_RRDB(nn.Module):
         self.encode_enc_3 = ResBlock(in_ch, out_ch)
 
     def forward(self, enc_feat, dec_feat, w=1):
-        # enc_feat = adaptive_instance_normalization(enc_feat, dec_feat)
         enc_feat = self.encode_enc_1(torch.cat([enc_feat, dec_feat], dim=1))
         enc_feat = self.encode_enc_2(enc_feat)
         enc_feat = self.encode_enc_3(enc_feat)
-        # scale = self.scale_first(enc_feat)
-        # scale = self.scale(scale)
-        # scale = self.scale_last(scale)
-        #
-        # shift = self.shift_first(enc_feat)
-        # shift = self.shift(shift)
-        # shift = self.shift_last(shift)
         residual = w * enc_feat
         out = dec_feat + residual
         return out

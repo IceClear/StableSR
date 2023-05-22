@@ -16,6 +16,12 @@ S-Lab, Nanyang Technological University
 
 <img src="assets/network.png" width="800px"/>
 
+### Update
+- **2023.05.22**: :whale: Improve the code to save more GPU memory.
+- **2023.05.20**: The [WebUI Demo](https://github.com/pkuliyi2015/sd-webui-stablesr) of StableSR is avaliable. Thank [Li Yi](https://github.com/pkuliyi2015) for the implementation!
+- **2023.05.13**: Add Colab demo of StableSR. <a href="https://colab.research.google.com/drive/11SE2_oDvbYtcuHDbaLAxsKk_o3flsO1T?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="google colab logo"></a>
+- **2023.05.11**: Repo is released.
+
 ### TODO
 - [ ] HuggingFace demo
 - [ ] Replicate demo
@@ -110,21 +116,23 @@ python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --
 #### Test
 
 Download the Diffusion and VQGAN pretrained models from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [Google Drive](https://drive.google.com/drive/folders/1FBkW9FtTBssM_42kOycMPE0o9U5biYCl?usp=sharing) | [OneDrive](https://entuedu-my.sharepoint.com/:f:/g/personal/jianyi001_e_ntu_edu_sg/Et5HPkgRyyxNk269f5xYCacBpZq-bggFRCDbL9imSQ5QDQ)].
-You may add ```--nocolor``` to disable color correction, this may lead to brighter results with less color similarity to the LR input.
+We use the same color correction scheme introduced in paper by default.
+You may change ```--colorfix_type wavelet``` for better color correction.
+You may also disable color correction by ```--colorfix_type nofix```
 
 - Test on 128 --> 512: You need at least 10G GPU memory to run this script (batchsize 2 by default)
 ```
-python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5
+python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 ```
 - Test on arbitrary size w/o chop for VQGAN (for results beyond 512): The memory cost depends on your image size, but usually above 10G.
 ```
-python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5
+python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 ```
 
 - Test on arbitrary size w/ chop for VQGAN: Current default setting needs at least 18G to run, you may reduce the VQGAN tile size by setting ```--vqgantile_size``` and ```--vqgantile_stride```.
 Note the min tile size is 512 and stride should be smaller than tile size. Smaller size may introduce more border artifacts.
 ```
-python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5
+python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 ```
 
 ### Citation

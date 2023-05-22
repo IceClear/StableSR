@@ -1539,31 +1539,3 @@ class EncoderUNetModelWT(nn.Module):
             results[str(result_list[i].size(-1))] = self.fea_tran[i](result_list[i], emb)
 
         return results
-
-# Positional encoding (section 5.1)
-class Embedder(nn.Module):
-    def __init__(self, multires=4, periodic_fns=[torch.sin, torch.cos], log_sampling=True):
-        super().__init__()
-        self.multires = multires
-        self.periodic_fns = periodic_fns
-        self.log_sampling = log_sampling
-        self.create_embedding_fn()
-
-    def create_embedding_fn(self):
-        embed_fns = []
-        max_freq = self.multires-1
-        N_freqs = self.multires
-
-        if self.log_sampling:
-            freq_bands = 2.**torch.linspace(0., max_freq, steps=N_freqs)
-        else:
-            freq_bands = torch.linspace(2.**0., 2.**max_freq, steps=N_freqs)
-
-        for freq in freq_bands:
-            for p_fn in self.periodic_fns:
-                embed_fns.append(lambda x, p_fn=p_fn, freq=freq : p_fn(x * freq))
-
-        self.embed_fns = embed_fns
-
-    def forward(self, inputs):
-        return torch.cat([fn(inputs) for fn in self.embed_fns], -1)

@@ -19,7 +19,7 @@ model:
     scale_factor: 0.18215
     use_ema: False
     # for training only
-    # ckpt_path: /mnt/lustre/jywang/code/stable_diffmodels/v2-1_512-ema-pruned.ckpt
+    ckpt_path: /mnt/lustre/jywang/code/SR-StableDiff/epoch=000117.ckpt
     unfrozen_diff: False
     random_size: False
     time_replace: 1000

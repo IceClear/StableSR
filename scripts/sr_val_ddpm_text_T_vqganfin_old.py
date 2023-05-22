@@ -21,35 +21,7 @@ from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
 import math
 import copy
-
-def calc_mean_std(feat, eps=1e-5):
-    """Calculate mean and std for adaptive_instance_normalization.
-    Args:
-        feat (Tensor): 4D tensor.
-        eps (float): A small value added to the variance to avoid
-            divide-by-zero. Default: 1e-5.
-    """
-    size = feat.size()
-    assert len(size) == 4, 'The input feature should be 4D tensor.'
-    b, c = size[:2]
-    feat_var = feat.view(b, c, -1).var(dim=2) + eps
-    feat_std = feat_var.sqrt().view(b, c, 1, 1)
-    feat_mean = feat.view(b, c, -1).mean(dim=2).view(b, c, 1, 1)
-    return feat_mean, feat_std
-
-def adaptive_instance_normalization(content_feat, style_feat):
-    """Adaptive instance normalization.
-    Adjust the reference features to have the similar color and illuminations
-    as those in the degradate features.
-    Args:
-        content_feat (Tensor): The reference feature.
-        style_feat (Tensor): The degradate features.
-    """
-    size = content_feat.size()
-    style_mean, style_std = calc_mean_std(style_feat)
-    content_mean, content_std = calc_mean_std(content_feat)
-    normalized_feat = (content_feat - content_mean.expand(size)) / content_std.expand(size)
-    return normalized_feat * style_std.expand(size) + style_mean.expand(size)
+from scripts.wavelet_color_fix import wavelet_reconstruction, adaptive_instance_normalization
 
 def space_timesteps(num_timesteps, section_counts):
     """
@@ -224,16 +196,23 @@ def main():
         help="weight for combining VQGAN and Diffusion",
     )
     parser.add_argument(
-        "--nocolor",
-        action='store_true',
-        help="if cancel color correction",
+        "--colorfix_type",
+        type=str,
+        default="nofix",
+        help="Color fix type to adjust the color of HR result according to LR input: adain (used in paper); wavelet; nofix",
     )
 
     opt = parser.parse_args()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     print('>>>>>>>>>>color correction>>>>>>>>>>>')
-    print(not opt.nocolor)
+    if opt.colorfix_type == 'adain':
+        print('Use adain color correction')
+    elif opt.colorfix_type == 'wavelet':
+        print('Use wavelet color correction')
+    else:
+        print('No color correction')
+    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 
     vqgan_config = OmegaConf.load("configs/autoencoder/autoencoder_kl_64x64x4_resi.yaml")
     vq_model = load_model_from_config(vqgan_config, opt.vqgan_ckpt)
@@ -274,6 +253,7 @@ def main():
                           linear_start=0.00085, linear_end=0.0120, cosine_s=8e-3)
     model.num_timesteps = 1000
 
+    # If you would like to start from the intermediate steps, you may copy a model with 1000 steps and add noise to LR to the specific steps, but this needs additional memory.
     # model_ori = copy.deepcopy(model)
 
     use_timesteps = set(space_timesteps(1000, [opt.ddpm_steps]))
@@ -314,8 +294,10 @@ def main():
 
                 samples, _ = model.sample(cond=semantic_c, struct_cond=init_latent, batch_size=init_image.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True)
                 x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
-                if not opt.nocolor:
+                if opt.colorfix_type == 'adain':
                     x_samples = adaptive_instance_normalization(x_samples, init_image)
+                elif opt.colorfix_type == 'wavelet':
+                    x_samples = wavelet_reconstruction(x_samples, init_image)
                 x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
 
                 for i in range(init_image.size(0)):
