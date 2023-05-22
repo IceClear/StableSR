@@ -182,11 +182,11 @@ def main():
 		help="path to checkpoint of model",
 	)
 	parser.add_argument(
-        "--vqgan_ckpt",
-        type=str,
-        default="./vqgan_cfw_00011.ckpt",
-        help="path to checkpoint of VQGAN model",
-    )
+		"--vqgan_ckpt",
+		type=str,
+		default="./vqgan_cfw_00011.ckpt",
+		help="path to checkpoint of VQGAN model",
+	)
 	parser.add_argument(
 		"--seed",
 		type=int,
@@ -219,11 +219,11 @@ def main():
 		help="upsample scale",
 	)
 	parser.add_argument(
-        "--colorfix_type",
-        type=str,
-        default="nofix",
-        help="Color fix type to adjust the color of HR result according to LR input: adain (used in paper); wavelet; nofix",
-    )
+		"--colorfix_type",
+		type=str,
+		default="nofix",
+		help="Color fix type to adjust the color of HR result according to LR input: adain (used in paper); wavelet; nofix",
+	)
 	parser.add_argument(
 		"--vqgantile_stride",
 		type=int,
@@ -241,13 +241,13 @@ def main():
 	seed_everything(opt.seed)
 
 	print('>>>>>>>>>>color correction>>>>>>>>>>>')
-    if opt.colorfix_type == 'adain':
-        print('Use adain color correction')
-    elif opt.colorfix_type == 'wavelet':
-        print('Use wavelet color correction')
-    else:
-        print('No color correction')
-    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+	if opt.colorfix_type == 'adain':
+		print('Use adain color correction')
+	elif opt.colorfix_type == 'wavelet':
+		print('Use wavelet color correction')
+	else:
+		print('No color correction')
+	print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 
 	config = OmegaConf.load(f"{opt.config}")
 	model = load_model_from_config(config, f"{opt.ckpt}")
@@ -278,7 +278,8 @@ def main():
 						  linear_start=0.00085, linear_end=0.0120, cosine_s=8e-3)
 	model.num_timesteps = 1000
 
-	# model_ori = copy.deepcopy(model)
+	sqrt_alphas_cumprod = copy.deepcopy(model.sqrt_alphas_cumprod)
+	sqrt_one_minus_alphas_cumprod = copy.deepcopy(model.sqrt_one_minus_alphas_cumprod)
 
 	use_timesteps = set(space_timesteps(1000, [opt.ddpm_steps]))
 	last_alpha_cumprod = 1.0
@@ -295,115 +296,117 @@ def main():
 	model.ori_timesteps = list(use_timesteps)
 	model.ori_timesteps.sort()
 	model = model.to(device)
-	# model_ori = model_ori.to(device)
 
 	precision_scope = autocast if opt.precision == "autocast" else nullcontext
 	niqe_list = []
 	with torch.no_grad():
-		with model.ema_scope():
-			tic = time.time()
-			all_samples = list()
-			for n in trange(len(images_path), desc="Sampling"):
-				if (n + 1) % opt.n_samples == 1 or opt.n_samples == 1:
-					cur_image = read_image(images_path[n])
-					size_min = min(cur_image.size(-1), cur_image.size(-2))
-					upsample_scale = max(512/size_min, opt.upscale)
-					cur_image = F.interpolate(
-								cur_image,
-								size=(int(cur_image.size(-2)*upsample_scale),
-									  int(cur_image.size(-1)*upsample_scale)),
-								mode='bicubic',
-								)
-					cur_image = cur_image.clamp(-1, 1)
-					im_lq_bs = [cur_image, ]  # 1 x c x h x w, [-1, 1]
-					im_path_bs = [images_path[n], ]
-				else:
-					cur_image = read_image(images_path[n])
-					size_min = min(cur_image.size(-1), cur_image.size(-2))
-					upsample_scale = max(512/size_min, opt.upscale)
-					cur_image = F.interpolate(
-								cur_image,
-								size=(int(cur_image.size(-2)*upsample_scale),
-									  int(cur_image.size(-1)*upsample_scale)),
-								mode='bicubic',
-								)
-					cur_image = cur_image.clamp(-1, 1)
-					im_lq_bs.append(cur_image) # 1 x c x h x w, [-1, 1]
-					im_path_bs.append(images_path[n]) # 1 x c x h x w, [-1, 1]
-
-				if (n + 1) % opt.n_samples == 0 or (n+1) == len(images_path):
-					im_lq_bs = torch.cat(im_lq_bs, dim=0)
-					ori_h, ori_w = im_lq_bs.shape[2:]
-					ref_patch=None
-					if not (ori_h % 32 == 0 and ori_w % 32 == 0):
-						flag_pad = True
-						pad_h = ((ori_h // 32) + 1) * 32 - ori_h
-						pad_w = ((ori_w // 32) + 1) * 32 - ori_w
-						im_lq_bs = F.pad(im_lq_bs, pad=(0, pad_w, 0, pad_h), mode='reflect')
+		with precision_scope("cuda"):
+			with model.ema_scope():
+				tic = time.time()
+				all_samples = list()
+				for n in trange(len(images_path), desc="Sampling"):
+					if (n + 1) % opt.n_samples == 1 or opt.n_samples == 1:
+						cur_image = read_image(images_path[n])
+						size_min = min(cur_image.size(-1), cur_image.size(-2))
+						upsample_scale = max(512/size_min, opt.upscale)
+						cur_image = F.interpolate(
+									cur_image,
+									size=(int(cur_image.size(-2)*upsample_scale),
+										  int(cur_image.size(-1)*upsample_scale)),
+									mode='bicubic',
+									)
+						cur_image = cur_image.clamp(-1, 1)
+						im_lq_bs = [cur_image, ]  # 1 x c x h x w, [-1, 1]
+						im_path_bs = [images_path[n], ]
 					else:
-						flag_pad = False
+						cur_image = read_image(images_path[n])
+						size_min = min(cur_image.size(-1), cur_image.size(-2))
+						upsample_scale = max(512/size_min, opt.upscale)
+						cur_image = F.interpolate(
+									cur_image,
+									size=(int(cur_image.size(-2)*upsample_scale),
+										  int(cur_image.size(-1)*upsample_scale)),
+									mode='bicubic',
+									)
+						cur_image = cur_image.clamp(-1, 1)
+						im_lq_bs.append(cur_image) # 1 x c x h x w, [-1, 1]
+						im_path_bs.append(images_path[n]) # 1 x c x h x w, [-1, 1]
 
-					if im_lq_bs.shape[2] > opt.vqgantile_size or im_lq_bs.shape[3] > opt.vqgantile_size:
-						im_spliter = ImageSpliterTh(im_lq_bs, opt.vqgantile_size, opt.vqgantile_stride, sf=1)
-						for im_lq_pch, index_infos in im_spliter:
-							seed_everything(opt.seed)
-							init_latent = model.get_first_stage_encoding(model.encode_first_stage(im_lq_pch))  # move to latent space
+					if (n + 1) % opt.n_samples == 0 or (n+1) == len(images_path):
+						im_lq_bs = torch.cat(im_lq_bs, dim=0)
+						ori_h, ori_w = im_lq_bs.shape[2:]
+						ref_patch=None
+						if not (ori_h % 32 == 0 and ori_w % 32 == 0):
+							flag_pad = True
+							pad_h = ((ori_h // 32) + 1) * 32 - ori_h
+							pad_w = ((ori_w // 32) + 1) * 32 - ori_w
+							im_lq_bs = F.pad(im_lq_bs, pad=(0, pad_w, 0, pad_h), mode='reflect')
+						else:
+							flag_pad = False
+
+						if im_lq_bs.shape[2] > opt.vqgantile_size or im_lq_bs.shape[3] > opt.vqgantile_size:
+							im_spliter = ImageSpliterTh(im_lq_bs, opt.vqgantile_size, opt.vqgantile_stride, sf=1)
+							for im_lq_pch, index_infos in im_spliter:
+								seed_everything(opt.seed)
+								init_latent = model.get_first_stage_encoding(model.encode_first_stage(im_lq_pch))  # move to latent space
+								text_init = ['']*opt.n_samples
+								semantic_c = model.cond_stage_model(text_init)
+								noise = torch.randn_like(init_latent)
+								# If you would like to start from the intermediate steps, you can add noise to LR to the specific steps.
+								t = repeat(torch.tensor([999]), '1 -> b', b=im_lq_bs.size(0))
+								t = t.to(device).long()
+								x_T = model.q_sample_respace(x_start=init_latent, t=t, sqrt_alphas_cumprod=sqrt_alphas_cumprod, sqrt_one_minus_alphas_cumprod=sqrt_one_minus_alphas_cumprod, noise=noise)
+								# x_T = noise
+								samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_pch.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
+								_, enc_fea_lq = vq_model.encode(im_lq_pch)
+								x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
+								if opt.colorfix_type == 'adain':
+									x_samples = adaptive_instance_normalization(x_samples, im_lq_pch)
+								elif opt.colorfix_type == 'wavelet':
+									x_samples = wavelet_reconstruction(x_samples, im_lq_pch)
+								im_spliter.update(x_samples, index_infos)
+							im_sr = im_spliter.gather()
+							im_sr = torch.clamp((im_sr+1.0)/2.0, min=0.0, max=1.0)
+						else:
+							init_latent = model.get_first_stage_encoding(model.encode_first_stage(im_lq_bs))  # move to latent space
 							text_init = ['']*opt.n_samples
 							semantic_c = model.cond_stage_model(text_init)
 							noise = torch.randn_like(init_latent)
-							# t = repeat(torch.tensor([999]), '1 -> b', b=im_lq_bs.size(0))
-							# t = t.to(device).long()
-							# x_T = model_ori.q_sample(x_start=init_latent, t=t, noise=noise)
-							x_T = noise
-							samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_pch.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
-							_, enc_fea_lq = vq_model.encode(im_lq_pch)
+							# If you would like to start from the intermediate steps, you can add noise to LR to the specific steps.
+							t = repeat(torch.tensor([999]), '1 -> b', b=im_lq_bs.size(0))
+							t = t.to(device).long()
+							x_T = model.q_sample_respace(x_start=init_latent, t=t, sqrt_alphas_cumprod=sqrt_alphas_cumprod, sqrt_one_minus_alphas_cumprod=sqrt_one_minus_alphas_cumprod, noise=noise)
+							# x_T = noise
+							samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_bs.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
+							_, enc_fea_lq = vq_model.encode(im_lq_bs)
 							x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
 							if opt.colorfix_type == 'adain':
-								x_samples = adaptive_instance_normalization(x_samples, im_lq_pch)
-			                elif opt.colorfix_type == 'wavelet':
-			                    x_samples = wavelet_reconstruction(x_samples, im_lq_pch)
-							im_spliter.update(x_samples, index_infos)
-						im_sr = im_spliter.gather()
-						im_sr = torch.clamp((im_sr+1.0)/2.0, min=0.0, max=1.0)
-					else:
-						init_latent = model.get_first_stage_encoding(model.encode_first_stage(im_lq_bs))  # move to latent space
-						text_init = ['']*opt.n_samples
-						semantic_c = model.cond_stage_model(text_init)
-						noise = torch.randn_like(init_latent)
-						# t = repeat(torch.tensor([999]), '1 -> b', b=im_lq_bs.size(0))
-						# t = t.to(device).long()
-						# x_T = model_ori.q_sample(x_start=init_latent, t=t, noise=noise)
-						x_T = noise
-						samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_bs.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
-						_, enc_fea_lq = vq_model.encode(im_lq_bs)
-						x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
-						if opt.colorfix_type == 'adain':
-							x_samples = adaptive_instance_normalization(x_samples, im_lq_bs)
-						elif opt.colorfix_type == 'wavelet':
-							x_samples = wavelet_reconstruction(x_samples, im_lq_bs)
-						im_sr = torch.clamp((x_samples+1.0)/2.0, min=0.0, max=1.0)
+								x_samples = adaptive_instance_normalization(x_samples, im_lq_bs)
+							elif opt.colorfix_type == 'wavelet':
+								x_samples = wavelet_reconstruction(x_samples, im_lq_bs)
+							im_sr = torch.clamp((x_samples+1.0)/2.0, min=0.0, max=1.0)
 
-					if upsample_scale > opt.upscale:
-						im_sr = F.interpolate(
-									im_sr,
-									size=(int(im_lq_bs.size(-2)*opt.upscale/upsample_scale),
-										  int(im_lq_bs.size(-1)*opt.upscale/upsample_scale)),
-									mode='bicubic',
-									)
-						im_sr = torch.clamp(im_sr, min=0.0, max=1.0)
+						if upsample_scale > opt.upscale:
+							im_sr = F.interpolate(
+										im_sr,
+										size=(int(im_lq_bs.size(-2)*opt.upscale/upsample_scale),
+											  int(im_lq_bs.size(-1)*opt.upscale/upsample_scale)),
+										mode='bicubic',
+										)
+							im_sr = torch.clamp(im_sr, min=0.0, max=1.0)
 
-					im_sr = im_sr.cpu().numpy().transpose(0,2,3,1)*255   # b x h x w x c
+						im_sr = im_sr.cpu().numpy().transpose(0,2,3,1)*255   # b x h x w x c
 
-					if flag_pad:
-						im_sr = im_sr[:, :ori_h*sf, :ori_w*sf, ]
+						if flag_pad:
+							im_sr = im_sr[:, :ori_h*sf, :ori_w*sf, ]
 
-					for jj in range(im_lq_bs.shape[0]):
-						img_name = str(Path(im_path_bs[jj]).name)
-						basename = os.path.splitext(os.path.basename(img_name))[0]
-						outpath = str(Path(opt.outdir)) + '/' + basename + '.png'
-						Image.fromarray(im_sr[jj, ].astype(np.uint8)).save(outpath)
+						for jj in range(im_lq_bs.shape[0]):
+							img_name = str(Path(im_path_bs[jj]).name)
+							basename = os.path.splitext(os.path.basename(img_name))[0]
+							outpath = str(Path(opt.outdir)) + '/' + basename + '.png'
+							Image.fromarray(im_sr[jj, ].astype(np.uint8)).save(outpath)
 
-			toc = time.time()
+				toc = time.time()
 
 	print(f"Your samples are ready and waiting for you here: \n{outpath} \n"
 		  f" \nEnjoy.")
