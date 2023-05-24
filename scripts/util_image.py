@@ -711,8 +711,10 @@ class ImageSpliterTh:
             starts = [0,]
         else:
             starts = list(range(0, length, self.stride))
-            if starts[-1] + self.pch_size > length:
-                starts[-1] = length - self.pch_size
+            for i in range(len(starts)):
+                if starts[i] + self.pch_size > length:
+                    starts[i] = length - self.pch_size
+            starts = sorted(set(starts), key=starts.index)
         return starts
 
     def __len__(self):
