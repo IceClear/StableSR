@@ -244,6 +244,7 @@ def main():
 			continue
 		cur_image = load_img(os.path.join(opt.init_img, item)).to(device)
 		cur_image = transform(cur_image)
+		cur_image = cur_image.clamp(-1, 1)
 		init_image_list.append(cur_image)
 	init_image_list = torch.cat(init_image_list, dim=0)
 	niters = math.ceil(init_image_list.size(0) / batch_size)
