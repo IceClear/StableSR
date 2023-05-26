@@ -573,7 +573,7 @@ if __name__ == "__main__":
             }
         },
     }
-    # We use wandb by default. Change to testtube is you do not want to use wandb
+    # We use wandb by default. Change to testtube if you do not want to use wandb
     default_logger_cfg = default_logger_cfgs["wandb"]
     os.makedirs(os.path.join(logdir, 'wandb'), exist_ok=True)
     if "logger" in lightning_config:

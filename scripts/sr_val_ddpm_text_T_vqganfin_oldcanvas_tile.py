@@ -398,7 +398,7 @@ def main():
 						im_sr = im_sr.cpu().numpy().transpose(0,2,3,1)*255   # b x h x w x c
 
 						if flag_pad:
-							im_sr = im_sr[:, :ori_h*sf, :ori_w*sf, ]
+							im_sr = im_sr[:, :ori_h, :ori_w, ]
 
 						for jj in range(im_lq_bs.shape[0]):
 							img_name = str(Path(im_path_bs[jj]).name)
