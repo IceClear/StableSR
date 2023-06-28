@@ -236,6 +236,12 @@ def main():
 		default=1280,
 		help="the size for tile operation before VQGAN decoder (in pixel)",
 	)
+	parser.add_argument(
+        "--input_size",
+        type=int,
+        default=512,
+        help="input size",
+    )
 
 	opt = parser.parse_args()
 	seed_everything(opt.seed)
@@ -308,7 +314,7 @@ def main():
 					if (n + 1) % opt.n_samples == 1 or opt.n_samples == 1:
 						cur_image = read_image(images_path[n])
 						size_min = min(cur_image.size(-1), cur_image.size(-2))
-						upsample_scale = max(512/size_min, opt.upscale)
+						upsample_scale = max(opt.input_size/size_min, opt.upscale)
 						cur_image = F.interpolate(
 									cur_image,
 									size=(int(cur_image.size(-2)*upsample_scale),
@@ -321,7 +327,7 @@ def main():
 					else:
 						cur_image = read_image(images_path[n])
 						size_min = min(cur_image.size(-1), cur_image.size(-2))
-						upsample_scale = max(512/size_min, opt.upscale)
+						upsample_scale = max(opt.input_size/size_min, opt.upscale)
 						cur_image = F.interpolate(
 									cur_image,
 									size=(int(cur_image.size(-2)*upsample_scale),
@@ -357,7 +363,7 @@ def main():
 								t = t.to(device).long()
 								x_T = model.q_sample_respace(x_start=init_latent, t=t, sqrt_alphas_cumprod=sqrt_alphas_cumprod, sqrt_one_minus_alphas_cumprod=sqrt_one_minus_alphas_cumprod, noise=noise)
 								# x_T = noise
-								samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_pch.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
+								samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_pch.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=int(opt.input_size/8), tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
 								_, enc_fea_lq = vq_model.encode(im_lq_pch)
 								x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
 								if opt.colorfix_type == 'adain':
@@ -377,7 +383,7 @@ def main():
 							t = t.to(device).long()
 							x_T = model.q_sample_respace(x_start=init_latent, t=t, sqrt_alphas_cumprod=sqrt_alphas_cumprod, sqrt_one_minus_alphas_cumprod=sqrt_one_minus_alphas_cumprod, noise=noise)
 							# x_T = noise
-							samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_bs.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=64, tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
+							samples, _ = model.sample_canvas(cond=semantic_c, struct_cond=init_latent, batch_size=im_lq_bs.size(0), timesteps=opt.ddpm_steps, time_replace=opt.ddpm_steps, x_T=x_T, return_intermediates=True, tile_size=int(opt.input_size/8), tile_overlap=opt.tile_overlap, batch_size_sample=opt.n_samples)
 							_, enc_fea_lq = vq_model.encode(im_lq_bs)
 							x_samples = vq_model.decode(samples * 1. / model.scale_factor, enc_fea_lq)
 							if opt.colorfix_type == 'adain':

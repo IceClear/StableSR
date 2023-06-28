@@ -19,8 +19,9 @@ S-Lab, Nanyang Technological University
 :star: If StableSR is helpful to your images or projects, please help star this repo. Thanks! :hugs:
 
 ### Update
+- **2023.06.28**: Support training on SD-2.1-768v.
 - **2023.05.22**: :whale: Improve the code to save more GPU memory, now 128 --> 512 needs 8.9G. Enable start from intermediate steps.
-- **2023.05.20**: The [WebUI Demo](https://github.com/pkuliyi2015/sd-webui-stablesr) of StableSR is avaliable. Thank [Li Yi](https://github.com/pkuliyi2015) for the implementation!
+- **2023.05.20**: :whale: The [**WebUI Demo**](https://github.com/pkuliyi2015/sd-webui-stablesr) [![GitHub Stars](https://img.shields.io/github/stars/pkuliyi2015/sd-webui-stablesr?style=social)](https://github.com/pkuliyi2015/sd-webui-stablesr) of StableSR is avaliable. Thank [Li Yi](https://github.com/pkuliyi2015) for the implementation!
 - **2023.05.13**: Add Colab demo of StableSR. <a href="https://colab.research.google.com/drive/11SE2_oDvbYtcuHDbaLAxsKk_o3flsO1T?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="google colab logo"></a>
 - **2023.05.11**: Repo is released.
 
@@ -136,6 +137,8 @@ Note the min tile size is 512 and stride should be smaller than tile size. Small
 ```
 python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 ```
+
+For test on 768 model, you need to set ```--input_size 768```. You can also adjust ```--tile_overlap```, ```--vqgantile_size``` and ```--vqgantile_stride``` accordingly.
 
 ### Citation
 If our work is useful for your research, please consider citing:

@@ -66,8 +66,16 @@ class RealESRGANDataset(data.Dataset):
             for class_file in class_list:
                 self.paths.extend(sorted([str(x) for x in Path(os.path.join(opt['imagenet_path'], class_file)).glob('*.'+'JPEG')]))
         if 'face_gt_path' in opt:
-            face_list = sorted([str(x) for x in Path(opt['face_gt_path']).glob('*.'+opt['image_type'])])
-            self.paths.extend(face_list[:opt['num_face']])
+            if isinstance(opt['face_gt_path'], str):
+                face_list = sorted([str(x) for x in Path(opt['face_gt_path']).glob('*.'+opt['image_type'])])
+                self.paths.extend(face_list[:opt['num_face']])
+            else:
+                face_list = sorted([str(x) for x in Path(opt['face_gt_path'][0]).glob('*.'+opt['image_type'])])
+                self.paths.extend(face_list[:opt['num_face']])
+                if len(opt['face_gt_path']) > 1:
+                    for i in range(len(opt['face_gt_path'])-1):
+                        self.paths.extend(sorted([str(x) for x in Path(opt['face_gt_path'][0]).glob('*.'+opt['image_type'])])[:opt['num_face']])
+
         # limit number of pictures for test
         if 'num_pic' in opt:
             if 'val' or 'test' in opt:

@@ -2,6 +2,7 @@
 logs/*
 models/*
 src/
+results/
 wandb/
 
 *.DS_Store

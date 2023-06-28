@@ -355,6 +355,8 @@ class DDPM(pl.LightningModule):
             x_recon = self.predict_start_from_noise(x, t=t, noise=model_out)
         elif self.parameterization == "x0":
             x_recon = model_out
+        elif self.parameterization == "v":
+            x_recon = self.predict_start_from_z_and_v(x, model_out, t)
         if clip_denoised:
             x_recon.clamp_(-1., 1.)
 
@@ -408,6 +410,12 @@ class DDPM(pl.LightningModule):
                 extract_into_tensor(self.sqrt_one_minus_alphas_cumprod, t, x.shape) * x
         )
 
+    def predict_start_from_z_and_v(self, x, v, t):
+        return (
+                extract_into_tensor(self.sqrt_alphas_cumprod, t, x.shape) * x -
+                extract_into_tensor(self.sqrt_one_minus_alphas_cumprod, t, x.shape) * v
+        )
+
     def get_loss(self, pred, target, mean=True):
         if self.loss_type == 'l1':
             loss = (target - pred).abs()
@@ -433,6 +441,8 @@ class DDPM(pl.LightningModule):
             target = noise
         elif self.parameterization == "x0":
             target = x_start
+        elif self.parameterization == "v":
+            target = self.get_v(x_start, noise, t)
         else:
             raise NotImplementedError(f"Paramterization {self.parameterization} not yet supported")
 
@@ -1172,6 +1182,8 @@ class LatentDiffusion(DDPM):
             target = x_start
         elif self.parameterization == "eps":
             target = noise
+        elif self.parameterization == "v":
+            target = self.get_v(x_start, noise, t)
         else:
             raise NotImplementedError()
 
@@ -1211,6 +1223,8 @@ class LatentDiffusion(DDPM):
             x_recon = self.predict_start_from_noise(x, t=t, noise=model_out)
         elif self.parameterization == "x0":
             x_recon = model_out
+        elif self.parameterization == "v":
+            x_recon = self.predict_start_from_z_and_v(x, model_out, t)
         else:
             raise NotImplementedError()
 
@@ -2504,6 +2518,8 @@ class LatentDiffusionSRTextWT(DDPM):
             x_recon = self.predict_start_from_noise(x, t=t, noise=model_out)
         elif self.parameterization == "x0":
             x_recon = model_out
+        elif self.parameterization == "v":
+            x_recon = self.predict_start_from_z_and_v(x, model_out, t)
         else:
             raise NotImplementedError()
 
@@ -2634,6 +2650,8 @@ class LatentDiffusionSRTextWT(DDPM):
             x_recon = self.predict_start_from_noise(x, t=t[:model_out.size(0)], noise=model_out)
         elif self.parameterization == "x0":
             x_recon = model_out
+        elif self.parameterization == "v":
+            x_recon = self.predict_start_from_z_and_v(x, model_out, t[:model_out.size(0)])
         else:
             raise NotImplementedError()
 
