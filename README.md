@@ -19,7 +19,7 @@ S-Lab, Nanyang Technological University
 :star: If StableSR is helpful to your images or projects, please help star this repo. Thanks! :hugs:
 
 ### Update
-- **2023.06.30**: :whale: [**New model**](https://huggingface.co/Iceclear/StableSR/blob/main/stablesr_768v_000139.ckpt) trained on [SD-2.1-768v](https://huggingface.co/stabilityai/stable-diffusion-2-1) is released! Fewer boundary artifacts but similar performance!
+- **2023.06.30**: :whale: [**New model**](https://huggingface.co/Iceclear/StableSR/blob/main/stablesr_768v_000139.ckpt) trained on [SD-2.1-768v](https://huggingface.co/stabilityai/stable-diffusion-2-1) is released! Better performance with fewer artifacts!
 - **2023.06.28**: Support training on SD-2.1-768v.
 - **2023.05.22**: :whale: Improve the code to save more GPU memory, now 128 --> 512 needs 8.9G. Enable start from intermediate steps.
 - **2023.05.20**: :whale: The [**WebUI**](https://github.com/pkuliyi2015/sd-webui-stablesr) [![GitHub Stars](https://img.shields.io/github/stars/pkuliyi2015/sd-webui-stablesr?style=social)](https://github.com/pkuliyi2015/sd-webui-stablesr) of StableSR is available. Thank [Li Yi](https://github.com/pkuliyi2015) for the implementation!
@@ -27,12 +27,14 @@ S-Lab, Nanyang Technological University
 - **2023.05.11**: Repo is released.
 
 ### TODO
+- [ ] StableSR for AIGC
 - [ ] HuggingFace demo
 - [ ] Replicate demo
 - [x] ~~Code release~~
 - [x] ~~Update link to paper and project page~~
 - [x] ~~Pretrained models~~
 - [x] ~~Colab demo~~
+- [x] ~~StableSR-768v released~~
 
 ### Demo on real-world SR
 
