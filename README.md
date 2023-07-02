@@ -121,7 +121,7 @@ python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --
 
 #### Test
 
-Download the Diffusion and VQGAN pretrained models from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [Google Drive](https://drive.google.com/drive/folders/1FBkW9FtTBssM_42kOycMPE0o9U5biYCl?usp=sharing) | [OneDrive](https://entuedu-my.sharepoint.com/:f:/g/personal/jianyi001_e_ntu_edu_sg/Et5HPkgRyyxNk269f5xYCacBpZq-bggFRCDbL9imSQ5QDQ)].
+Download the Diffusion and autoencoder pretrained models from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [Google Drive](https://drive.google.com/drive/folders/1FBkW9FtTBssM_42kOycMPE0o9U5biYCl?usp=sharing) | [OneDrive](https://entuedu-my.sharepoint.com/:f:/g/personal/jianyi001_e_ntu_edu_sg/Et5HPkgRyyxNk269f5xYCacBpZq-bggFRCDbL9imSQ5QDQ)].
 We use the same color correction scheme introduced in paper by default.
 You may change ```--colorfix_type wavelet``` for better color correction.
 You may also disable color correction by ```--colorfix_type nofix```
@@ -130,13 +130,13 @@ You may also disable color correction by ```--colorfix_type nofix```
 ```
 python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 ```
-- Test on arbitrary size w/o chop for VQGAN (for results beyond 512): The memory cost depends on your image size, but usually above 10G.
+- Test on arbitrary size w/o chop for autoencoder (for results beyond 512): The memory cost depends on your image size, but is usually above 10G.
 ```
 python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 ```
 
-- Test on arbitrary size w/ chop for VQGAN: Current default setting needs at least 18G to run, you may reduce the VQGAN tile size by setting ```--vqgantile_size``` and ```--vqgantile_stride```.
-Note the min tile size is 512 and stride should be smaller than tile size. Smaller size may introduce more border artifacts.
+- Test on arbitrary size w/ chop for autoencoder: Current default setting needs at least 18G to run, you may reduce the autoencoder tile size by setting ```--vqgantile_size``` and ```--vqgantile_stride```.
+Note the min tile size is 512 and the stride should be smaller than the tile size. A smaller size may introduce more border artifacts.
 ```
 python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
 ```
@@ -159,7 +159,7 @@ This project is licensed under <a rel="license" href="https://github.com/IceClea
 
 ### Acknowledgement
 
-This project is based on [stablediffusion](https://github.com/Stability-AI/stablediffusion), [latent-diffusion](https://github.com/CompVis/latent-diffusion), [SPADE](https://github.com/NVlabs/SPADE), [mixture-of-diffusers](https://github.com/albarji/mixture-of-diffusers) and [BasicSR](https://github.com/XPixelGroup/BasicSR). Thanks for their awesome works.
+This project is based on [stablediffusion](https://github.com/Stability-AI/stablediffusion), [latent-diffusion](https://github.com/CompVis/latent-diffusion), [SPADE](https://github.com/NVlabs/SPADE), [mixture-of-diffusers](https://github.com/albarji/mixture-of-diffusers) and [BasicSR](https://github.com/XPixelGroup/BasicSR). Thanks for their awesome work.
 
 ### Contact
-If you have any question, please feel free to reach me out at `iceclearwjy@gmail.com`.
+If you have any questions, please feel free to reach me out at `iceclearwjy@gmail.com`.
