@@ -121,7 +121,7 @@ python main.py --train --base configs/autoencoder/autoencoder_kl_64x64x4_resi.ya
 python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --gpus GPU_ID, --resume RESUME_PATH --scale_lr False
 ```
 
-#### Test
+#### Test directly
 
 Download the Diffusion and autoencoder pretrained models from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [Google Drive](https://drive.google.com/drive/folders/1FBkW9FtTBssM_42kOycMPE0o9U5biYCl?usp=sharing) | [OneDrive](https://entuedu-my.sharepoint.com/:f:/g/personal/jianyi001_e_ntu_edu_sg/Et5HPkgRyyxNk269f5xYCacBpZq-bggFRCDbL9imSQ5QDQ)].
 We use the same color correction scheme introduced in paper by default.
@@ -144,6 +144,14 @@ python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/st
 ```
 
 - For test on 768 model, you need to set ```--config configs/stableSRNew/v2-finetune_text_T_768v.yaml```, ```--input_size 768``` and ```--ckpt```. You can also adjust ```--tile_overlap```, ```--vqgantile_size``` and ```--vqgantile_stride``` accordingly. We did not finetune CFW.
+
+#### Test using Replicate API
+```
+import replicate
+model = replicate.models.get(<model_name>)
+model.predict(input_image=...)
+```
+You may see [here](https://replicate.com/cjwbw/stablesr/api) for more information.
 
 ### Citation
 If our work is useful for your research, please consider citing:
