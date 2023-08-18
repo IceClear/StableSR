@@ -313,7 +313,7 @@ def main():
 					semantic_c = model.cond_stage_model(text_init)
 
 					noise = torch.randn_like(init_latent)
-                    # If you would like to start from the intermediate steps, you can add noise to LR to the specific steps.
+					# If you would like to start from the intermediate steps, you can add noise to LR to the specific steps.
 					t = repeat(torch.tensor([999]), '1 -> b', b=init_image.size(0))
 					t = t.to(device).long()
 					x_T = model.q_sample_respace(x_start=init_latent, t=t, sqrt_alphas_cumprod=sqrt_alphas_cumprod, sqrt_one_minus_alphas_cumprod=sqrt_one_minus_alphas_cumprod, noise=noise)

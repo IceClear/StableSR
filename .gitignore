@@ -4,6 +4,7 @@ models/*
 src/
 results/
 wandb/
+output/
 
 *.DS_Store
 .idea
@@ -13,9 +14,9 @@ version.py
 
 # ignored files with suffix
 *.html
-# *.png
+*.png
 *.jpeg
-# *.jpg
+*.jpg
 *.gif
 *.pth
 *.zip

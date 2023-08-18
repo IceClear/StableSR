@@ -79,7 +79,6 @@ def chunk(it, size):
 	it = iter(it)
 	return iter(lambda: tuple(islice(it, size)), ())
 
-
 def load_model_from_config(config, ckpt, verbose=False):
 	print(f"Loading model from {ckpt}")
 	pl_sd = torch.load(ckpt, map_location="cpu")
