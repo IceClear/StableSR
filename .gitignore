@@ -5,6 +5,7 @@ src/
 results/
 wandb/
 output/
+weights/
 
 *.DS_Store
 .idea

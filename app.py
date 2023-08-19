@@ -1,6 +1,6 @@
 """
 This file is used for deploying hugging face demo:
-https://huggingface.co/spaces/
+https://huggingface.co/spaces/Iceclear/StableSR/
 """
 
 import sys
@@ -25,8 +25,12 @@ from scripts.wavelet_color_fix import wavelet_reconstruction, adaptive_instance_
 from scripts.util_image import ImageSpliterTh
 from basicsr.utils.download_util import load_file_from_url
 from einops import rearrange, repeat
+from pathlib import Path
 
 # os.system("pip freeze")
+ckpt_dir = Path('./weights')
+if not ckpt_dir.exists():
+	ckpt_dir.mkdir()
 
 pretrain_model_url = {
 	'stablesr_512': 'https://huggingface.co/Iceclear/StableSR/resolve/main/stablesr_000117.ckpt',
@@ -34,12 +38,12 @@ pretrain_model_url = {
 	'CFW': 'https://huggingface.co/Iceclear/StableSR/resolve/main/vqgan_cfw_00011.ckpt',
 }
 # download weights
-if not os.path.exists('./stablesr_000117.ckpt'):
-	load_file_from_url(url=pretrain_model_url['stablesr_512'], model_dir='./', progress=True, file_name=None)
-if not os.path.exists('./stablesr_768v_000139.ckpt'):
-	load_file_from_url(url=pretrain_model_url['stablesr_768'], model_dir='./', progress=True, file_name=None)
-if not os.path.exists('./vqgan_cfw_00011.ckpt'):
-	load_file_from_url(url=pretrain_model_url['CFW'], model_dir='./', progress=True, file_name=None)
+if not os.path.exists('./weights/stablesr_000117.ckpt'):
+	load_file_from_url(url=pretrain_model_url['stablesr_512'], model_dir='./weights/', progress=True, file_name=None)
+if not os.path.exists('./weights/stablesr_768v_000139.ckpt'):
+	load_file_from_url(url=pretrain_model_url['stablesr_768'], model_dir='./weights/', progress=True, file_name=None)
+if not os.path.exists('./weights/vqgan_cfw_00011.ckpt'):
+	load_file_from_url(url=pretrain_model_url['CFW'], model_dir='./weights/', progress=True, file_name=None)
 
 # download images
 torch.hub.download_url_to_file(
@@ -146,7 +150,7 @@ def load_model_from_config(config, ckpt, verbose=False):
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = torch.device("cuda")
 vqgan_config = OmegaConf.load("./configs/autoencoder/autoencoder_kl_64x64x4_resi.yaml")
-vq_model = load_model_from_config(vqgan_config, './vqgan_cfw_00011.ckpt')
+vq_model = load_model_from_config(vqgan_config, './weights/vqgan_cfw_00011.ckpt')
 vq_model = vq_model.to(device)
 
 os.makedirs('output', exist_ok=True)
@@ -159,11 +163,11 @@ def inference(image, upscale, dec_w, seed, model_type, ddpm_steps, colorfix_type
 
 	if model_type == '512':
 		config = OmegaConf.load("./configs/stableSRNew/v2-finetune_text_T_512.yaml")
-		model = load_model_from_config(config, "./stablesr_000117.ckpt")
+		model = load_model_from_config(config, "./weights/stablesr_000117.ckpt")
 		min_size = 512
 	else:
 		config = OmegaConf.load("./configs/stableSRNew/v2-finetune_text_T_768v.yaml")
-		model = load_model_from_config(config, "./stablesr_768v_000139.ckpt")
+		model = load_model_from_config(config, "./weights/stablesr_768v_000139.ckpt")
 		min_size = 768
 
 	model = model.to(device)
@@ -222,7 +226,7 @@ def inference(image, upscale, dec_w, seed, model_type, ddpm_steps, colorfix_type
 
 						init_template = init_template.type(torch.float16).to(device)
 
-						if init_template.size(-1) <= 1280 or init_template.size(-2) <= 1280:
+						if init_template.size(-1) <= 1024 and init_template.size(-2) <= 1024:
 							init_latent_generator, enc_fea_lq = vq_model.encode(init_template)
 							init_latent = model.get_first_stage_encoding(init_latent_generator)
 							text_init = ['']*init_template.size(0)
@@ -245,7 +249,7 @@ def inference(image, upscale, dec_w, seed, model_type, ddpm_steps, colorfix_type
 								x_samples = wavelet_reconstruction(x_samples, init_template)
 							x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
 						else:
-							im_spliter = ImageSpliterTh(init_template, 1280, 1000, sf=1)
+							im_spliter = ImageSpliterTh(init_template, min(init_template.size(-1), init_template.size(-2), 1024), min(init_template.size(-1)-200, init_template.size(-2)-200, 768), sf=1)
 							for im_lq_pch, index_infos in im_spliter:
 								init_latent = model.get_first_stage_encoding(model.encode_first_stage(im_lq_pch))  # move to latent space
 								text_init = ['']*init_latent.size(0)
@@ -337,7 +341,7 @@ demo = gr.Interface(
 			value="512",
 			label="Model",
 			),
-		gr.Slider(10, 1000, value=200, step=1, label='Sampling timesteps for DDPM'),
+		gr.Slider(10, 1000, value=200, step=1, label='Sampling timesteps for DDPM (Large steps for better quality, but huge time)'),
 		gr.Dropdown(
 			choices=["none", "adain", "wavelet"],
 			value="adain",
@@ -360,4 +364,4 @@ demo = gr.Interface(
 	)
 
 demo.queue(concurrency_count=1)
-demo.launch(share=True)
+demo.launch()
