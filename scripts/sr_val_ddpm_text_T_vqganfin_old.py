@@ -272,13 +272,40 @@ def main():
 	model.ori_timesteps.sort()
 	model = model.to(device)
 
+	param_list = []
+	untrain_paramlist = []
+	name_list = []
+	for k, v in model.named_parameters():
+		if 'spade' in k or 'structcond_stage_model' in k:
+			param_list.append(v)
+		else:
+			name_list.append(k)
+			untrain_paramlist.append(v)
+	trainable_params = sum(p.numel() for p in param_list)
+	untrainable_params = sum(p.numel() for p in untrain_paramlist)
+	print(name_list)
+	print(trainable_params)
+	print(untrainable_params)
+
+	param_list = []
+	untrain_paramlist = []
+	for k, v in vq_model.named_parameters():
+		if 'fusion_layer' in k:
+			param_list.append(v)
+		elif 'loss' not in k:
+			untrain_paramlist.append(v)
+	trainable_params += sum(p.numel() for p in param_list)
+	# untrainable_params += sum(p.numel() for p in untrain_paramlist)
+	print(trainable_params)
+	print(untrainable_params)
+
 	precision_scope = autocast if opt.precision == "autocast" else nullcontext
 	niqe_list = []
 	with torch.no_grad():
 		with precision_scope("cuda"):
 			with model.ema_scope():
 				tic = time.time()
-				all_samples = list()
+				count = 0
 				for n in trange(niters, desc="Sampling"):
 					init_image = init_image_list[n]
 					init_latent_generator, enc_fea_lq = vq_model.encode(init_image)
@@ -300,6 +327,13 @@ def main():
 					elif opt.colorfix_type == 'wavelet':
 						x_samples = wavelet_reconstruction(x_samples, init_image)
 					x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
+					# count += 1
+					# if count==5:
+					# 	tic = time.time()
+					# if count >= 15:
+					# 	print('>>>>>>>>>>>>>>>>>>>>>>>>')
+					# 	print(time.time()-tic)
+					# 	print(s)
 
 					for i in range(init_image.size(0)):
 						img_name = img_list.pop(0)
