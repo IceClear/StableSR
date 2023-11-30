@@ -60,7 +60,7 @@ For more evaluation, please refer to our [paper](https://arxiv.org/abs/2305.0701
 
 - StableSR is capable of achieving arbitrary upscaling in theory, below is an 4x example with a result beyond 4K (4096x6144).
 
-[<img src="assets/main-fig.png" width="800px"/>](https://imgsli.com/MTc4NDk2)
+[<img src="assets/main-fig.png" width="800px"/>](https://imgsli.com/MjIzMjQx)
 
 ```
 # DDIM w/ negative prompts
