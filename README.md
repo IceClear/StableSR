@@ -19,7 +19,11 @@ S-Lab, Nanyang Technological University
 :star: If StableSR is helpful to your images or projects, please help star this repo. Thanks! :hugs:
 
 ### Update
-- **2023.10.08**: Our test sets associated with the results in our [paper](https://arxiv.org/abs/2305.07015) are now avaliable at [[HuggingFace](https://huggingface.co/datasets/Iceclear/StableSR-TestSets)] and [[OpenXLab](https://openxlab.org.cn/datasets/Iceclear/StableSR_Testsets)]. You may have an easy comparison with StableSR now.
+- **2023.11.30**: Code Update.
+  - Support DDIM and negative prompts
+  - Add CFW training scripts
+  - Add FaceSR training and test scripts (**Not test yet**) 
+- **2023.10.08**: Our test sets associated with the results in our [paper](https://arxiv.org/abs/2305.07015) are now available at [[HuggingFace](https://huggingface.co/datasets/Iceclear/StableSR-TestSets)] and [[OpenXLab](https://openxlab.org.cn/datasets/Iceclear/StableSR_Testsets)]. You may have an easy comparison with StableSR now.
 - **2023.08.19**: Integrated to :hugs: [Hugging Face](https://huggingface.co/spaces). Try out online demo! [![Hugging Face](https://img.shields.io/badge/Demo-%F0%9F%A4%97%20Hugging%20Face-blue)](https://huggingface.co/spaces/Iceclear/StableSR).
 - **2023.08.19**: Integrated to :panda_face: [OpenXLab](https://openxlab.org.cn/apps). Try out online demo! [![OpenXLab](https://img.shields.io/badge/Demo-%F0%9F%90%BC%20OpenXLab-blue)](https://openxlab.org.cn/apps/detail/Iceclear/StableSR).
 - **2023.07.31**: Integrated to :rocket: [Replicate](https://replicate.com/explore). Try out online demo! [![Replicate](https://img.shields.io/badge/Demo-%F0%9F%9A%80%20Replicate-blue)](https://replicate.com/cjwbw/stablesr) Thank [Chenxi](https://github.com/chenxwh) for the implementation!
@@ -33,6 +37,8 @@ S-Lab, Nanyang Technological University
 - **2023.05.11**: Repo is released.
 
 ### TODO
+- [ ] StableSR-XL
+- [ ] StableSR-Text
 - [x] ~~Code release~~
 - [x] ~~Update link to paper and project page~~
 - [x] ~~Pretrained models~~
@@ -40,6 +46,7 @@ S-Lab, Nanyang Technological University
 - [x] ~~StableSR-768v released~~
 - [x] ~~Replicate demo~~
 - [x] ~~HuggingFace demo~~
+- [x] ~~StableSR-face released~~
 
 ### Demo on real-world SR
 
@@ -51,14 +58,19 @@ For more evaluation, please refer to our [paper](https://arxiv.org/abs/2305.0701
 
 ### Demo on 4K Results
 
-- StableSR is capable of achieving arbitrary upscaling in theory, below is a 8x example with a result beyond 4K (5120x3680).
-The example image is taken from [here](https://github.com/Mikubill/sd-webui-controlnet/blob/main/tests/images/ski.jpg).
+- StableSR is capable of achieving arbitrary upscaling in theory, below is an 4x example with a result beyond 4K (4096x6144).
 
-[<img src="assets/imgsli_11.jpg" width="800px"/>](https://imgsli.com/MTc4NDk2)
+[<img src="assets/main-fig.png" width="800px"/>](https://imgsli.com/MTc4NDk2)
 
-- We further directly test StableSR on AIGC and compared with several diffusion-based upscalers following the suggestions.
-A 4K demo is [here](https://imgsli.com/MTc4MDg3), which is a 4x SR on the image from [here](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111).
-More comparisons can be found [here](https://github.com/IceClear/StableSR/issues/2).
+```
+# DDIM w/ negative prompts
+python scripts/sr_val_ddim_text_T_negativeprompt_canvas_tile.py --config configs/stableSRNew/v2-finetune_text_T_768v.yaml --ckpt stablesr_768v_000139.ckpt --vqgan_ckpt vqgan_finetune_00011.ckpt --init-img ./inputs/test_example/ --outdir ../output/ --ddim_steps 20 --dec_w 0.0 --colorfix_type wavelet --scale 7.0 --use_negative_prompt --upscale 4 --seed 42 --n_samples 1 --input_size 768 --tile_overlap 48 --ddim_eta 1.0
+```
+
+- **More examples**.
+  - [4K Demo1](https://imgsli.com/MTc4MDg3), which is a 4x SR on the image from [here](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111).
+  - [4K Demo2](https://imgsli.com/MTc4NDk2), which is a 8x SR on the image from [here](https://github.com/Mikubill/sd-webui-controlnet/blob/main/tests/images/ski.jpg).
+  - More comparisons can be found [here](https://github.com/IceClear/StableSR/issues/2) and [here](https://github.com/pkuliyi2015/sd-webui-stablesr).
 
 ### Dependencies and Installation
 - Pytorch == 1.12.1
@@ -96,7 +108,16 @@ python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --
 
 - Train CFW: set the ckpt_path in config files ([Line 6](https://github.com/IceClear/StableSR/blob/main/configs/autoencoder/autoencoder_kl_64x64x4_resi.yaml#L6)).
 
-You need to first generate training data using the finetuned diffusion model in the first stage. The data folder should be like this:
+You need to first generate training data using the finetuned diffusion model in the first stage. 
+```
+# General SR
+python scripts/generate_vqgan_data.py --config configs/stableSRdata/test_data.yaml --ckpt CKPT_PATH --outdir OUTDIR --skip_grid --ddpm_steps 200 --base_i 0 --seed 10000
+```
+```
+# For face data
+python scripts/generate_vqgan_data_face.py --config configs/stableSRdata/test_data_face.yaml --ckpt CKPT_PATH --outdir OUTDIR --skip_grid --ddpm_steps 200 --base_i 0 --seed 10000
+```
+The data folder should be like this:
 ```
 CFW_trainingdata/
     └── inputs
@@ -126,11 +147,12 @@ python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --
 
 #### Test directly
 
-Download the Diffusion and autoencoder pretrained models from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [Google Drive](https://drive.google.com/drive/folders/1FBkW9FtTBssM_42kOycMPE0o9U5biYCl?usp=sharing) | [OneDrive](https://entuedu-my.sharepoint.com/:f:/g/personal/jianyi001_e_ntu_edu_sg/Et5HPkgRyyxNk269f5xYCacBpZq-bggFRCDbL9imSQ5QDQ) | [OpenXLab](https://openxlab.org.cn/models/detail/Iceclear/StableSR)].
+Download the Diffusion and autoencoder pretrained models from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [OpenXLab](https://openxlab.org.cn/models/detail/Iceclear/StableSR)].
 We use the same color correction scheme introduced in paper by default.
 You may change ```--colorfix_type wavelet``` for better color correction.
 You may also disable color correction by ```--colorfix_type nofix```
 
+- **DDIM is supported now. See [here](https://github.com/IceClear/StableSR/tree/main/scripts)**
 - Test on 128 --> 512: You need at least 10G GPU memory to run this script (batchsize 2 by default)
 ```
 python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt CKPT_PATH --vqgan_ckpt VQGANCKPT_PATH --init-img INPUT_PATH --outdir OUT_DIR --ddpm_steps 200 --dec_w 0.5 --colorfix_type adain
@@ -147,6 +169,14 @@ python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/st
 ```
 
 - For test on 768 model, you need to set ```--config configs/stableSRNew/v2-finetune_text_T_768v.yaml```, ```--input_size 768``` and ```--ckpt```. You can also adjust ```--tile_overlap```, ```--vqgantile_size``` and ```--vqgantile_stride``` accordingly. We did not finetune CFW.
+
+#### Test FaceSR
+You need to first generate reference images using [[CodeFormer](https://github.com/sczhou/CodeFormer)] or other blind face models.   
+Pretrained Models: [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [OpenXLab](https://openxlab.org.cn/models/detail/Iceclear/StableSR)].
+```
+python scripts/sr_val_ddpm_text_T_vqganfin_facerefersampling.py --init-img LR_PATH --ref-img REF_PATH --outdir OUTDIR --config ./configs/stableSRNew/v2-finetune_face_T_512.yaml --ckpt face_stablesr_000050.ckpt
+ --vqgan_ckpt face_vqgan_cfw_00011.ckpt --ddpm_steps 200 --dec_w 0.0
+```
 
 #### Test using Replicate API
 ```
