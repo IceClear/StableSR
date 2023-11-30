@@ -3179,6 +3179,83 @@ class LatentDiffusionSRTextWT(DDPM):
         x = 2. * (x - x.min()) / (x.max() - x.min()) - 1.
         return x
 
+class LatentDiffusionSRTextWTFFHQ(LatentDiffusionSRTextWT):
+
+    @torch.no_grad()
+    def get_input(self, batch, k=None, return_first_stage_outputs=False, force_c_encode=False,
+                  cond_key=None, return_original_cond=False, bs=None, val=False, text_cond=[''], return_gt=False, resize_lq=True):
+
+        im_gt = batch['gt'].cuda()
+        im_gt = im_gt.to(memory_format=torch.contiguous_format).float()
+        im_lq = batch['lq'].cuda()
+        im_lq = im_lq.to(memory_format=torch.contiguous_format).float()
+
+        # clamp and round
+        im_lq = torch.clamp(im_lq, 0, 1.0)
+
+        self.gt = im_gt
+        self.lq = im_lq
+
+        if resize_lq:
+            self.lq = F.interpolate(
+                    self.lq,
+                    size=(self.gt.size(-2),
+                          self.gt.size(-1)),
+                    mode='bicubic',
+                    )
+
+        # training pair pool
+        if not val and not self.random_size:
+            self._dequeue_and_enqueue()
+        # sharpen self.gt again, as we have changed the self.gt with self._dequeue_and_enqueue
+        self.lq = self.lq.contiguous()  # for the warning: grad and param do not obey the gradient layout contract
+        self.lq = self.lq*2 - 1.0
+        self.gt = self.gt*2 - 1.0
+
+        if self.random_size:
+            self.lq, self.gt = self.randn_cropinput(self.lq, self.gt)
+
+        self.lq = torch.clamp(self.lq, -1.0, 1.0)
+
+        if random.random() < 0.005:
+            self.lq = self.gt
+
+        x = self.lq
+        y = self.gt
+        if bs is not None:
+            x = x[:bs]
+            y = y[:bs]
+        x = x.to(self.device)
+        y = y.to(self.device)
+        encoder_posterior = self.encode_first_stage(x)
+        z = self.get_first_stage_encoding(encoder_posterior).detach()
+
+        encoder_posterior_y = self.encode_first_stage(y)
+        z_gt = self.get_first_stage_encoding(encoder_posterior_y).detach()
+
+        xc = None
+        if self.use_positional_encodings:
+            assert NotImplementedError
+            pos_x, pos_y = self.compute_latent_shifts(batch)
+            c = {'pos_x': pos_x, 'pos_y': pos_y}
+
+        while len(text_cond) < z.size(0):
+            text_cond.append(text_cond[-1])
+        if len(text_cond) > z.size(0):
+            text_cond = text_cond[:z.size(0)]
+        assert len(text_cond) == z.size(0)
+
+        out = [z, text_cond]
+        out.append(z_gt)
+
+        if return_first_stage_outputs:
+            xrec = self.decode_first_stage(z_gt)
+            out.extend([x, self.gt, xrec])
+        if return_original_cond:
+            out.append(xc)
+
+        return out
+        
 class DiffusionWrapper(pl.LightningModule):
     def __init__(self, diff_model_config, conditioning_key):
         super().__init__()

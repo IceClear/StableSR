@@ -86,7 +86,8 @@ class FFHQDegradationDataset(data.Dataset):
             logger.info(f'Use random color jitter. Prob: {self.color_jitter_prob}, shift: {self.color_jitter_shift}')
         if self.gray_prob is not None:
             logger.info(f'Use random gray. Prob: {self.gray_prob}')
-        self.color_jitter_shift /= 255.
+        if self.color_jitter_shift is not None:
+            self.color_jitter_shift /= 255.
 
     @staticmethod
     def color_jitter(img, shift):

@@ -1,0 +1,73 @@
+model:
+  base_learning_rate: 5.0e-5
+  target: ldm.models.autoencoder.AutoencoderKLResi
+  params:
+    # for training only
+    # ckpt_path: vqgan_finetune_00011.ckpt
+    monitor: "val/rec_loss"
+    embed_dim: 4
+    fusion_w: 1.0
+    freeze_dec: True
+    synthesis_data: False
+    lossconfig:
+      target: ldm.modules.losses.LPIPSWithDiscriminator
+      params:
+        disc_start: 501
+        kl_weight: 0
+        disc_weight: 0.025
+        disc_factor: 1.0
+
+    ddconfig:
+      double_z: true
+      z_channels: 4
+      resolution: 512
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult:
+      - 1
+      - 2
+      - 4
+      - 4
+      num_res_blocks: 2
+      attn_resolutions: []
+      dropout: 0.0
+
+    image_key: 'gt'
+
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 1
+    num_workers: 6
+    wrap: True
+    train:
+      target: basicsr.data.single_image_dataset.SingleImageNPDataset
+      params:
+        gt_path: ['/mnt/lustre/jywang/code/ddpm_face_data/v2-T200-multistep/']
+        io_backend:
+          type: disk
+    validation:
+      target: basicsr.data.single_image_dataset.SingleImageNPDataset
+      params:
+        gt_path: ['/mnt/lustre/jywang/code/ddpm_face_data/v2-T200-multistep/']
+        io_backend:
+          type: disk
+
+lightning:
+  modelcheckpoint:
+    params:
+      every_n_train_steps: 1500
+  callbacks:
+    image_logger:
+      target: main.ImageLogger
+      params:
+        batch_frequency: 1500
+        max_images: 4
+        increase_log_steps: False
+
+  trainer:
+    benchmark: True
+    max_steps: 800000
+    accumulate_grad_batches: 8
