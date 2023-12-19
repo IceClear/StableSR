@@ -22,7 +22,7 @@ S-Lab, Nanyang Technological University
 - **2023.11.30**: Code Update.
   - Support DDIM and negative prompts
   - Add CFW training scripts
-  - Add FaceSR training and test scripts (**Not test yet**) 
+  - Add FaceSR training and test scripts (**Not test yet**)
 - **2023.10.08**: Our test sets associated with the results in our [paper](https://arxiv.org/abs/2305.07015) are now available at [[HuggingFace](https://huggingface.co/datasets/Iceclear/StableSR-TestSets)] and [[OpenXLab](https://openxlab.org.cn/datasets/Iceclear/StableSR_Testsets)]. You may have an easy comparison with StableSR now.
 - **2023.08.19**: Integrated to :hugs: [Hugging Face](https://huggingface.co/spaces). Try out online demo! [![Hugging Face](https://img.shields.io/badge/Demo-%F0%9F%A4%97%20Hugging%20Face-blue)](https://huggingface.co/spaces/Iceclear/StableSR).
 - **2023.08.19**: Integrated to :panda_face: [OpenXLab](https://openxlab.org.cn/apps). Try out online demo! [![OpenXLab](https://img.shields.io/badge/Demo-%F0%9F%90%BC%20OpenXLab-blue)](https://openxlab.org.cn/apps/detail/Iceclear/StableSR).
@@ -39,6 +39,8 @@ S-Lab, Nanyang Technological University
 ### TODO
 - [ ] StableSR-XL
 - [ ] StableSR-Text
+- [ ] ComfyUI support
+- [ ] Acceleration
 - [x] ~~Code release~~
 - [x] ~~Update link to paper and project page~~
 - [x] ~~Pretrained models~~
@@ -108,7 +110,7 @@ python main.py --train --base configs/stableSRNew/v2-finetune_text_T_512.yaml --
 
 - Train CFW: set the ckpt_path in config files ([Line 6](https://github.com/IceClear/StableSR/blob/main/configs/autoencoder/autoencoder_kl_64x64x4_resi.yaml#L6)).
 
-You need to first generate training data using the finetuned diffusion model in the first stage. 
+You need to first generate training data using the finetuned diffusion model in the first stage.
 ```
 # General SR
 python scripts/generate_vqgan_data.py --config configs/stableSRdata/test_data.yaml --ckpt CKPT_PATH --outdir OUTDIR --skip_grid --ddpm_steps 200 --base_i 0 --seed 10000
@@ -175,7 +177,7 @@ You need to first generate reference images using [[CodeFormer](https://github.c
 Pretrained Models: [[HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) | [OpenXLab](https://openxlab.org.cn/models/detail/Iceclear/StableSR)].
 ```
 python scripts/sr_val_ddpm_text_T_vqganfin_facerefersampling.py --init-img LR_PATH --ref-img REF_PATH --outdir OUTDIR --config ./configs/stableSRNew/v2-finetune_face_T_512.yaml --ckpt face_stablesr_000050.ckpt
- --vqgan_ckpt face_vqgan_cfw_00011.ckpt --ddpm_steps 200 --dec_w 0.0
+ --vqgan_ckpt face_vqgan_cfw_00011.ckpt --ddpm_steps 200 --dec_w 0.0 --facesr
 ```
 
 #### Test using Replicate API

@@ -23,12 +23,11 @@ model:
     unfrozen_diff: False
     random_size: False
     time_replace: 1000
-    usm_prob: 0.1
+    use_usm: False
     # test_gt: True
     #P2 weighting
     p2_gamma: ~
     p2_k: ~
-    init_sft: False
 
     unet_config:
       target: ldm.modules.diffusionmodules.openaimodel.UNetModelDualcondV2
@@ -52,7 +51,8 @@ model:
     first_stage_config:
       target: ldm.models.autoencoder.AutoencoderKL
       params:
-        ckpt_path: stablesr_000117.ckpt
+        # for training only
+        # ckpt_path: stablesr_000117.ckpt
         embed_dim: 4
         monitor: val/rec_loss
         ddconfig:
