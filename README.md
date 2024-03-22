@@ -21,7 +21,7 @@ S-Lab, Nanyang Technological University
 ### Update
 - **2024.02.29**: Support StableSR with [SD-Turbo](https://huggingface.co/stabilityai/sd-turbo). Thank [Andray](https://github.com/light-and-ray) for the finding!
 
-  Now the [ComfyUI](https://github.com/gameltb/comfyui-stablesr) ![GitHub Stars](https://img.shields.io/github/stars/gameltb/comfyui-stablesr?style=social)](https://github.com/gameltb/comfyui-stablesr) of StableSR is also available. Thank [gameltb](https://github.com/gameltb) and [WSJUSA](https://github.com/WSJUSA) for the implementation!
+  Now the [ComfyUI](https://github.com/gameltb/comfyui-stablesr) [![GitHub Stars](https://img.shields.io/github/stars/gameltb/comfyui-stablesr?style=social)](https://github.com/gameltb/comfyui-stablesr) of StableSR is also available. Thank [gameltb](https://github.com/gameltb) and [WSJUSA](https://github.com/WSJUSA) for the implementation!
 - **2023.11.30**: Code Update.
   - Support DDIM and negative prompts
   - Add CFW training scripts
@@ -156,8 +156,7 @@ We use the same color correction scheme introduced in paper by default.
 You may change ```--colorfix_type wavelet``` for better color correction.
 You may also disable color correction by ```--colorfix_type nofix```
 
-- **DDIM is supported now. See [here](https://github.com/IceClear/StableSR/tree/main/scripts)**
-- StableSR-Turbo: Get the ckpt first from [HuggingFace](https://huggingface.co/Iceclear/StableSR/blob/main/README.md) or [OpenXLab](https://openxlab.org.cn/models/detail/Iceclear/StableSR)]. Then you just need to modify ```--ckpt_path``` and set ```--ddpm_steps``` to 4. See examples below:
+- **StableSR-Turbo**: Get the ckpt first from [[HuggingFace](https://huggingface.co/Iceclear/StableSR/resolve/main/stablesr_turbo.ckpt) or [OpenXLab](https://openxlab.org.cn/models/detail/Iceclear/StableSR/tree/main)]. Then you just need to modify ```--ckpt_path``` and set ```--ddpm_steps``` to 4. See examples below:
 
 ```
 python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt ./stablesr_turbo.ckpt --init-img LQ_PATH --outdir OUT_PATH --ddpm_steps 4 --dec_w 0.5 --seed 42 --n_samples 1 --vqgan_ckpt ./vqgan_cfw_00011.ckpt --colorfix_type wavelet
@@ -166,6 +165,8 @@ python scripts/sr_val_ddpm_text_T_vqganfin_old.py --config configs/stableSRNew/v
 ```
 python scripts/sr_val_ddpm_text_T_vqganfin_oldcanvas_tile.py --config configs/stableSRNew/v2-finetune_text_T_512.yaml --ckpt ./stablesr_turbo.ckpt --init-img LQ_PATH --outdir OUT_PATH --ddpm_steps 4 --dec_w 0.5 --seed 42 --n_samples 1 --vqgan_ckpt ./vqgan_cfw_00011.ckpt --colorfix_type wavelet --upscale 4
 ```
+
+- **DDIM is supported now. See [here](https://github.com/IceClear/StableSR/tree/main/scripts)**
 
 - Test on 128 --> 512: You need at least 10G GPU memory to run this script (batchsize 2 by default)
 ```
