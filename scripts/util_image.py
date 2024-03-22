@@ -705,6 +705,7 @@ class ImageSpliterTh:
         self.im_ori = im
         self.im_res = torch.zeros([bs, chn, height*sf, width*sf], dtype=im.dtype, device=im.device)
         self.pixel_count = torch.zeros([bs, chn, height*sf, width*sf], dtype=im.dtype, device=im.device)
+        self.weight = self._gaussian_weights(pch_size, pch_size, bs, im.device)
 
     def extract_starts(self, length):
         if length <= self.pch_size:
@@ -749,6 +750,23 @@ class ImageSpliterTh:
 
         return pch, (h_start, h_end, w_start, w_end)
 
+    def _gaussian_weights(self, tile_width, tile_height, nbatches, device):
+        """Generates a gaussian mask of weights for tile contributions"""
+        from numpy import pi, exp, sqrt
+        import numpy as np
+
+        latent_width = tile_width
+        latent_height = tile_height
+
+        var = 0.01
+        midpoint = (latent_width - 1) / 2  # -1 because index goes from 0 to latent_width - 1
+        x_probs = [exp(-(x-midpoint)*(x-midpoint)/(latent_width*latent_width)/(2*var)) / sqrt(2*pi*var) for x in range(latent_width)]
+        midpoint = latent_height / 2
+        y_probs = [exp(-(y-midpoint)*(y-midpoint)/(latent_height*latent_height)/(2*var)) / sqrt(2*pi*var) for y in range(latent_height)]
+
+        weights = np.outer(y_probs, x_probs)
+        return torch.tile(torch.tensor(weights, device=device), (nbatches, 3, 1, 1))
+
     def update(self, pch_res, index_infos):
         '''
         Input:
@@ -763,6 +781,21 @@ class ImageSpliterTh:
 
         self.im_res[:, :, h_start:h_end, w_start:w_end] += pch_res
         self.pixel_count[:, :, h_start:h_end, w_start:w_end] += 1
+
+    def update_gaussian(self, pch_res, index_infos):
+        '''
+        Input:
+            pch_res: n x c x pch_size x pch_size, float
+            index_infos: (h_start, h_end, w_start, w_end)
+        '''
+        if index_infos is None:
+            w_start, w_end = self.w_start, self.w_end
+            h_start, h_end = self.h_start, self.h_end
+        else:
+            h_start, h_end, w_start, w_end = index_infos
+
+        self.im_res[:, :, h_start:h_end, w_start:w_end] += pch_res * self.weight
+        self.pixel_count[:, :, h_start:h_end, w_start:w_end] += self.weight
 
     def gather(self):
         assert torch.all(self.pixel_count != 0)

@@ -339,7 +339,7 @@ def main():
 				init_image_list = []
 				for item in cur_img_list:
 					cur_image = load_img(os.path.join(opt.init_img, item)).to(device)
-                    cur_image = transform(cur_image)
+					cur_image = transform(cur_image)
 					init_image_list.append(cur_image)
 				init_image = torch.cat(init_image_list, dim=0)
 				init_latent_generator, enc_fea_lq = vq_model.encode(init_image)

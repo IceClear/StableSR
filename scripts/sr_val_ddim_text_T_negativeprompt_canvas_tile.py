@@ -441,7 +441,7 @@ def main():
 								x_samples = adaptive_instance_normalization(x_samples, im_lq_pch)
 							elif opt.colorfix_type == 'wavelet':
 								x_samples = wavelet_reconstruction(x_samples, im_lq_pch)
-							im_spliter.update(x_samples, index_infos)
+							im_spliter.update_gaussian(x_samples, index_infos)
 						im_sr = im_spliter.gather()
 						im_sr = torch.clamp((im_sr+1.0)/2.0, min=0.0, max=1.0)
 					else:
