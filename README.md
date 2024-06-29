@@ -19,6 +19,7 @@ S-Lab, Nanyang Technological University
 :star: If StableSR is helpful to your images or projects, please help star this repo. Thanks! :hugs:
 
 ### Update
+- **2024.06.28**: Accepted by [IJCV](https://link.springer.com/journal/11263). See the latest [Full paper](https://github.com/IceClear/StableSR/releases/download/UncompressedPDF/StableSR_IJCV_Uncompressed.pdf).
 - **2024.02.29**: Support StableSR with [SD-Turbo](https://huggingface.co/stabilityai/sd-turbo). Thank [Andray](https://github.com/light-and-ray) for the finding!
 
   Now the [ComfyUI](https://github.com/gameltb/comfyui-stablesr) [![GitHub Stars](https://img.shields.io/github/stars/gameltb/comfyui-stablesr?style=social)](https://github.com/gameltb/comfyui-stablesr) of StableSR is also available. Thank [gameltb](https://github.com/gameltb) and [WSJUSA](https://github.com/WSJUSA) for the implementation!
@@ -40,8 +41,6 @@ S-Lab, Nanyang Technological University
 - **2023.05.11**: Repo is released.
 
 ### TODO
-- [ ] StableSR-XL
-- [ ] StableSR-Text
 - [x] ~~Code release~~
 - [x] ~~Update link to paper and project page~~
 - [x] ~~Pretrained models~~
