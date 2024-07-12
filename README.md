@@ -203,11 +203,11 @@ You may see [here](https://replicate.com/cjwbw/stablesr/api) for more informatio
 ### Citation
 If our work is useful for your research, please consider citing:
 
-    @inproceedings{wang2023exploiting,
-        author = {Wang, Jianyi and Yue, Zongsheng and Zhou, Shangchen and Chan, Kelvin CK and Loy, Chen Change},
-        title = {Exploiting Diffusion Prior for Real-World Image Super-Resolution},
-        booktitle = {arXiv preprint arXiv:2305.07015},
-        year = {2023}
+    @article{wang2024exploiting,
+      author = {Wang, Jianyi and Yue, Zongsheng and Zhou, Shangchen and Chan, Kelvin C.K. and Loy, Chen Change},
+      title = {Exploiting Diffusion Prior for Real-World Image Super-Resolution},
+      article = {International Journal of Computer Vision},
+      year = {2024}
     }
 
 ### License
